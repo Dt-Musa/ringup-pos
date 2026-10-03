@@ -10,33 +10,31 @@ const users: { email: string; name: string; role: Role }[] = [
   { email: "cashier@pos.test", name: "Demo Cashier", role: "CASHIER" },
 ];
 
-const categories = ["Coffee", "Tea", "Juice & Drinks", "Pastries", "Breakfast", "Meals", "Snacks", "Desserts"];
+const categories = ["Drinks", "Snacks", "Stationery", "Toiletries", "Groceries", "Household"];
 
 // [sku, name, category, buyingCost, sellingPrice, stockQty, minStock]  (UGX)
 const products: [string, string, string, number, number, number, number][] = [
-  ["COF-001", "Espresso", "Coffee", 1500, 5000, 100, 20],
-  ["COF-002", "Cappuccino", "Coffee", 2500, 8000, 100, 20],
-  ["COF-003", "Café Latte", "Coffee", 2800, 9000, 80, 20],
-  ["TEA-001", "Masala Tea", "Tea", 800, 4000, 120, 25],
-  ["TEA-002", "Ginger Lemon Tea", "Tea", 900, 4500, 90, 20],
-  ["JUI-001", "Fresh Passion Juice", "Juice & Drinks", 2000, 6000, 60, 15],
-  ["JUI-002", "Mango Smoothie", "Juice & Drinks", 3000, 8000, 50, 15],
-  ["JUI-003", "Bottled Water 500ml", "Juice & Drinks", 600, 2000, 200, 40],
-  ["PAS-001", "Butter Croissant", "Pastries", 1800, 5000, 40, 10],
-  ["PAS-002", "Cinnamon Roll", "Pastries", 2000, 6000, 8, 10], // below min stock on purpose
-  ["BRK-001", "Spanish Omelette", "Breakfast", 4000, 12000, 30, 8],
-  ["BRK-002", "Chapati & Beans", "Breakfast", 2500, 7000, 40, 10],
-  ["MEA-001", "Chicken Burger & Fries", "Meals", 9000, 22000, 25, 8],
-  ["MEA-002", "Beef Pilau", "Meals", 7000, 18000, 25, 8],
-  ["MEA-003", "Grilled Tilapia Meal", "Meals", 14000, 30000, 15, 5],
-  ["SNK-001", "Samosa (2 pcs)", "Snacks", 1000, 3000, 60, 15],
-  ["DES-001", "Chocolate Cake Slice", "Desserts", 3500, 9000, 20, 6],
-  ["DES-002", "Fruit Salad", "Desserts", 2500, 7000, 0, 5], // out of stock on purpose
+  ["DRK-001", "Bottled Water 500ml", "Drinks", 600, 1000, 200, 40],
+  ["DRK-002", "Soda 300ml", "Drinks", 900, 1500, 150, 30],
+  ["DRK-003", "Fresh Juice 1L", "Drinks", 3000, 5000, 60, 15],
+  ["DRK-004", "Energy Drink 330ml", "Drinks", 1800, 3000, 8, 10], // below min stock on purpose
+  ["SNK-001", "Potato Crisps 50g", "Snacks", 700, 1200, 120, 25],
+  ["SNK-002", "Chocolate Bar", "Snacks", 1500, 2500, 80, 20],
+  ["SNK-003", "Biscuits Pack", "Snacks", 1000, 1800, 90, 20],
+  ["STA-001", "Ballpoint Pen (Blue)", "Stationery", 300, 500, 300, 50],
+  ["STA-002", "A4 Exercise Book 96pg", "Stationery", 1200, 2000, 100, 20],
+  ["STA-003", "A4 Printing Paper (Ream)", "Stationery", 14000, 20000, 25, 5],
+  ["STA-004", "Pencil HB", "Stationery", 200, 400, 250, 50],
+  ["TOI-001", "Bar Soap 200g", "Toiletries", 1800, 3000, 70, 15],
+  ["TOI-002", "Toothpaste 100ml", "Toiletries", 3500, 5500, 45, 10],
+  ["TOI-003", "Shampoo 250ml", "Toiletries", 6000, 9000, 30, 8],
+  ["TOI-004", "Toilet Paper (4 roll)", "Toiletries", 3200, 5000, 0, 10], // out of stock on purpose
+  ["GRO-001", "Sugar 1kg", "Groceries", 4200, 5500, 60, 15],
+  ["GRO-002", "Cooking Oil 1L", "Groceries", 7500, 10000, 40, 10],
+  ["GRO-003", "Rice 1kg", "Groceries", 3800, 5000, 80, 20],
+  ["HOU-001", "Laundry Detergent 500g", "Household", 4000, 6500, 35, 8],
+  ["HOU-002", "Candle (Pack of 6)", "Household", 2500, 4000, 50, 10],
 ];
-
-const tables = [
-  ["T1", 2], ["T2", 2], ["T3", 4], ["T4", 4], ["T5", 4], ["T6", 6], ["Patio 1", 4], ["Patio 2", 6],
-] as const;
 
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
@@ -70,17 +68,13 @@ async function main() {
     }
   }
 
-  for (const [name, seats] of tables) {
-    await prisma.diningTable.upsert({ where: { name }, update: { seats }, create: { name, seats } });
-  }
-
   await prisma.supplier.upsert({
-    where: { name: "Kampala Fresh Supplies" },
+    where: { name: "Kampala Wholesale Traders" },
     update: {},
-    create: { name: "Kampala Fresh Supplies", phone: "+256700000000", email: "orders@kfs.example", address: "Kampala, Uganda" },
+    create: { name: "Kampala Wholesale Traders", phone: "+256700000000", email: "orders@kwt.example", address: "Kampala, Uganda" },
   });
 
-  console.log(`Seeded ${users.length} users, ${categories.length} categories, ${products.length} products, ${tables.length} tables.`);
+  console.log(`Seeded ${users.length} users, ${categories.length} categories, ${products.length} products.`);
   console.log(`Demo password for all users: ${PASSWORD}`);
 }
 

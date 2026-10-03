@@ -8,10 +8,7 @@ CREATE TYPE "StockMovementType" AS ENUM ('SALE', 'ADDITION', 'REDUCTION', 'ADJUS
 CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'MOBILE_MONEY', 'CARD', 'BANK_TRANSFER');
 
 -- CreateEnum
-CREATE TYPE "SaleStatus" AS ENUM ('OPEN', 'COMPLETED', 'VOIDED', 'PARTIALLY_REFUNDED', 'REFUNDED');
-
--- CreateEnum
-CREATE TYPE "TableStatus" AS ENUM ('FREE', 'OCCUPIED', 'RESERVED');
+CREATE TYPE "SaleStatus" AS ENUM ('COMPLETED', 'VOIDED', 'PARTIALLY_REFUNDED', 'REFUNDED');
 
 -- CreateEnum
 CREATE TYPE "PurchaseOrderStatus" AS ENUM ('DRAFT', 'ORDERED', 'RECEIVED', 'CANCELLED');
@@ -73,30 +70,18 @@ CREATE TABLE "StockMovement" (
 );
 
 -- CreateTable
-CREATE TABLE "DiningTable" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "seats" INTEGER NOT NULL DEFAULT 4,
-    "status" "TableStatus" NOT NULL DEFAULT 'FREE',
-
-    CONSTRAINT "DiningTable_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Sale" (
     "id" TEXT NOT NULL,
     "receiptNo" TEXT NOT NULL,
     "cashierId" TEXT NOT NULL,
-    "tableId" TEXT,
     "status" "SaleStatus" NOT NULL DEFAULT 'COMPLETED',
     "subtotal" INTEGER NOT NULL,
     "discount" INTEGER NOT NULL DEFAULT 0,
     "total" INTEGER NOT NULL,
-    "paymentMethod" "PaymentMethod",
+    "paymentMethod" "PaymentMethod" NOT NULL,
     "amountTendered" INTEGER,
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "paidAt" TIMESTAMP(3),
 
     CONSTRAINT "Sale_pkey" PRIMARY KEY ("id")
 );
@@ -197,9 +182,6 @@ CREATE INDEX "StockMovement_productId_createdAt_idx" ON "StockMovement"("product
 CREATE INDEX "StockMovement_type_idx" ON "StockMovement"("type");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DiningTable_name_key" ON "DiningTable"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Sale_receiptNo_key" ON "Sale"("receiptNo");
 
 -- CreateIndex
@@ -243,9 +225,6 @@ ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_purchaseOrderId_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_cashierId_fkey" FOREIGN KEY ("cashierId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Sale" ADD CONSTRAINT "Sale_tableId_fkey" FOREIGN KEY ("tableId") REFERENCES "DiningTable"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "SaleItem" ADD CONSTRAINT "SaleItem_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "Sale"("id") ON DELETE CASCADE ON UPDATE CASCADE;

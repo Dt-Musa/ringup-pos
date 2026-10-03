@@ -31,17 +31,10 @@ enum PaymentMethod {
 }
 
 enum SaleStatus {
-  OPEN // open tab (restaurant): items added, not yet paid
   COMPLETED
   VOIDED
   PARTIALLY_REFUNDED
   REFUNDED
-}
-
-enum TableStatus {
-  FREE
-  OCCUPIED
-  RESERVED
 }
 
 enum PurchaseOrderStatus {
@@ -117,31 +110,20 @@ model StockMovement {
   @@index([type])
 }
 
-model DiningTable {
-  id     String      @id @default(cuid())
-  name   String      @unique
-  seats  Int         @default(4)
-  status TableStatus @default(FREE)
-  sales  Sale[]
-}
-
 model Sale {
-  id             String         @id @default(cuid())
-  receiptNo      String         @unique
+  id             String        @id @default(cuid())
+  receiptNo      String        @unique
   cashierId      String
-  tableId        String? // set for dine-in / open tabs
-  status         SaleStatus     @default(COMPLETED)
+  status         SaleStatus    @default(COMPLETED)
   subtotal       Int
-  discount       Int            @default(0)
+  discount       Int           @default(0)
   total          Int
-  paymentMethod  PaymentMethod? // null while a tab is still OPEN
+  paymentMethod  PaymentMethod
   amountTendered Int?
   notes          String?
-  createdAt      DateTime       @default(now())
-  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
 
   cashier        User            @relation(fields: [cashierId], references: [id])
-  table          DiningTable?    @relation(fields: [tableId], references: [id])
   items          SaleItem[]
   refunds        Refund[]
   stockMovements StockMovement[]
