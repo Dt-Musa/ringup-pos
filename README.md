@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DVN POS
 
-## Getting Started
+A web-based Point of Sale for a small shop (DVN Programming Challenge). **Phase 1 – foundation:** database schema, authentication, role-based access control, app shell with placeholder pages.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router, TypeScript, Tailwind v4) · PostgreSQL · Prisma 6 · iron-session (encrypted cookie sessions) · bcryptjs password hashing · Zod. Currency: **UGX** (stored as whole integers).
+
+## Quick start
+
+Requirements: Node 20+, PostgreSQL 15+ (Docker or a local install).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repo> && cd pos
+npm install                 # also runs `prisma generate`
+cp .env.example .env        # then set SESSION_SECRET (openssl rand -base64 32)
+
+# 1. Start PostgreSQL – pick ONE:
+docker compose up -d db     # option A: Docker (user/pass/db = pos/pos/pos)
+#   option B: local Postgres, e.g. on Debian/Ubuntu:
+#   sudo apt install postgresql
+#   sudo -u postgres psql -c "CREATE USER pos WITH PASSWORD 'pos' CREATEDB;" -c "CREATE DATABASE pos OWNER pos;"
+
+# 2. Create tables + demo data
+npm run db:deploy           # applies migrations (use `npm run db:migrate` while changing the schema)
+npm run db:seed
+
+# 3. Run
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Production build: `npm run build && npm start` (set `SESSION_COOKIE_SECURE=false` if you serve it over plain HTTP outside localhost).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Demo accounts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`**). Change it for any real deployment.
 
-## Learn More
+| Email | Role | Can open |
+|-------|------|----------|
+| admin@pos.test | ADMIN | everything incl. Users |
+| manager@pos.test | MANAGER | Dashboard, POS, Products, Inventory, Sales, Reports |
+| cashier@pos.test | CASHIER | Dashboard, POS, Sales (own sales only) |
 
-To learn more about Next.js, take a look at the following resources:
+### Environment variables (`.env.example`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Var | Purpose |
+|-----|---------|
+| `DATABASE_URL` | Postgres connection string |
+| `SESSION_SECRET` | ≥32 chars, encrypts the session cookie |
+| `SEED_PASSWORD` | password given to demo users by the seed |
+| `SESSION_COOKIE_SECURE` | optional; defaults to `true` in production, `false` in dev |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Scripts
 
-## Deploy on Vercel
+`dev`, `build`, `start`, `lint`, `db:migrate` (dev migration), `db:deploy` (apply migrations), `db:seed`, `db:reset` (drop + migrate + seed), `db:studio`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Access control
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Defined once in `lib/permissions.ts` (page nav table + API rule table) and enforced in three layers:
+
+1. `proxy.ts` (Next 16's replacement for middleware) – reads the encrypted cookie; redirects anonymous users to `/login`, redirects forbidden pages to `/dashboard?denied=1`, returns `401`/`403` JSON for APIs.
+2. Server layouts/pages – `requireUser()` / `guardPage()` in `lib/auth.ts` re-load the user from the DB, so deactivating a user or changing a role takes effect immediately.
+3. Route handlers – `apiAuth([roles])` per endpoint.
+
+| Area | ADMIN | MANAGER | CASHIER |
+|------|:--:|:--:|:--:|
+| Dashboard, POS, Sales | yes | yes | yes (own sales) |
+| Products, Inventory, Reports | yes | yes | no |
+| Users | yes | no | no |
+| `GET /api/products` | yes | yes | yes |
+| `POST/PUT/PATCH/DELETE /api/products` | yes | yes | no |
+
+Existing endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
+
+## Schema (`prisma/schema.prisma`)
+
+- **User** – email (unique), name, passwordHash (bcrypt), `role` (ADMIN | MANAGER | CASHIER), active.
+- **Category** – name, sortOrder.
+- **Product** – sku (unique), name, image, category, buyingCost, sellingPrice, stockQty, minStock, active.
+- **StockMovement** – product, `type` (SALE | ADDITION | REDUCTION | ADJUSTMENT | RETURN), signed `qty`, reason, user, createdAt; optional link to Sale / PurchaseOrder. Full audit trail of stock changes.
+- **Sale** – unique receiptNo, cashier, subtotal, discount, total, `paymentMethod` (CASH | MOBILE_MONEY | CARD | BANK_TRANSFER), `status` (COMPLETED | VOIDED | PARTIALLY_REFUNDED | REFUNDED), amountTendered, notes, createdAt.
+- **SaleItem** – sale, product, qty, **unitPrice and unitCost snapshots** (later price changes don't rewrite history, and profit stays reportable), lineTotal.
+- **Refund** / **RefundItem** – refund against a sale (amount, reason, user), per-item qty and whether to restock.
+- *Bonus:* **Supplier**, **PurchaseOrder** (DRAFT | ORDERED | RECEIVED | CANCELLED), **PurchaseOrderItem**.
+
+## Seed data
+
+3 users, 6 categories (Drinks, Snacks, Stationery, Toiletries, Groceries, Household), 20 products with costs/prices/stock (one below min-stock and one out of stock to exercise low-stock UI), opening-stock movements, and one supplier. The seed is idempotent; re-running keeps live stock quantities.
+
+## Project layout
+
+```
+app/login            login page          app/(app)/*   authenticated shell + pages
+app/api/*            route handlers      proxy.ts      first-line auth/role checks
+lib/permissions.ts   role/route tables   lib/auth.ts   server-side guards
+lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
+```
+
+## Roadmap
+
+Phase 2: products CRUD, inventory movements, POS checkout. Phase 3: sales history, refunds, receipts. Phase 4: dashboard, reports, user management.
