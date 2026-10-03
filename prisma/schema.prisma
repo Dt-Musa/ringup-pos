@@ -1,0 +1,235 @@
+// Café / Restaurant POS schema. Money is stored as whole UGX (Int) – UGX has no minor unit.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  CASHIER
+}
+
+enum StockMovementType {
+  SALE
+  ADDITION
+  REDUCTION
+  ADJUSTMENT
+  RETURN
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  CARD
+  BANK_TRANSFER
+}
+
+enum SaleStatus {
+  OPEN // open tab (restaurant): items added, not yet paid
+  COMPLETED
+  VOIDED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum TableStatus {
+  FREE
+  OCCUPIED
+  RESERVED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ORDERED
+  RECEIVED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(CASHIER)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sales          Sale[]
+  refunds        Refund[]
+  stockMovements StockMovement[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  sortOrder Int       @default(0)
+  products  Product[]
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  sku          String   @unique
+  name         String
+  image        String?
+  categoryId   String
+  buyingCost   Int      @default(0)
+  sellingPrice Int
+  stockQty     Int      @default(0)
+  minStock     Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category           Category            @relation(fields: [categoryId], references: [id])
+  stockMovements     StockMovement[]
+  saleItems          SaleItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  @@index([categoryId])
+  @@index([active])
+}
+
+model StockMovement {
+  id              String            @id @default(cuid())
+  productId       String
+  type            StockMovementType
+  qty             Int // signed change applied to stockQty (negative for SALE/REDUCTION)
+  reason          String?
+  userId          String
+  saleId          String?
+  purchaseOrderId String?
+  createdAt       DateTime          @default(now())
+
+  product       Product        @relation(fields: [productId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+  sale          Sale?          @relation(fields: [saleId], references: [id])
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+
+  @@index([productId, createdAt])
+  @@index([type])
+}
+
+model DiningTable {
+  id     String      @id @default(cuid())
+  name   String      @unique
+  seats  Int         @default(4)
+  status TableStatus @default(FREE)
+  sales  Sale[]
+}
+
+model Sale {
+  id             String         @id @default(cuid())
+  receiptNo      String         @unique
+  cashierId      String
+  tableId        String? // set for dine-in / open tabs
+  status         SaleStatus     @default(COMPLETED)
+  subtotal       Int
+  discount       Int            @default(0)
+  total          Int
+  paymentMethod  PaymentMethod? // null while a tab is still OPEN
+  amountTendered Int?
+  notes          String?
+  createdAt      DateTime       @default(now())
+  paidAt         DateTime?
+
+  cashier        User            @relation(fields: [cashierId], references: [id])
+  table          DiningTable?    @relation(fields: [tableId], references: [id])
+  items          SaleItem[]
+  refunds        Refund[]
+  stockMovements StockMovement[]
+
+  @@index([createdAt])
+  @@index([cashierId])
+  @@index([status])
+}
+
+model SaleItem {
+  id        String @id @default(cuid())
+  saleId    String
+  productId String
+  qty       Int
+  unitPrice Int // snapshot of Product.sellingPrice at time of sale
+  unitCost  Int // snapshot of Product.buyingCost at time of sale
+  lineTotal Int
+
+  sale        Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id])
+  refundItems RefundItem[]
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+model Refund {
+  id        String   @id @default(cuid())
+  saleId    String
+  userId    String
+  amount    Int
+  reason    String?
+  createdAt DateTime @default(now())
+
+  sale  Sale         @relation(fields: [saleId], references: [id])
+  user  User         @relation(fields: [userId], references: [id])
+  items RefundItem[]
+
+  @@index([saleId])
+}
+
+model RefundItem {
+  id         String  @id @default(cuid())
+  refundId   String
+  saleItemId String
+  qty        Int
+  restock    Boolean @default(true)
+
+  refund   Refund   @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  saleItem SaleItem @relation(fields: [saleItemId], references: [id])
+}
+
+// ---- Optional bonus: suppliers & purchase orders ----
+
+model Supplier {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  phone          String?
+  email          String?
+  address        String?
+  createdAt      DateTime        @default(now())
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  poNumber    String              @unique
+  supplierId  String
+  createdById String
+  status      PurchaseOrderStatus @default(DRAFT)
+  total       Int                 @default(0)
+  notes       String?
+  createdAt   DateTime            @default(now())
+  receivedAt  DateTime?
+
+  supplier       Supplier            @relation(fields: [supplierId], references: [id])
+  createdBy      User                @relation(fields: [createdById], references: [id])
+  items          PurchaseOrderItem[]
+  stockMovements StockMovement[]
+}
+
+model PurchaseOrderItem {
+  id              String @id @default(cuid())
+  purchaseOrderId String
+  productId       String
+  qty             Int
+  unitCost        Int
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id])
+}
