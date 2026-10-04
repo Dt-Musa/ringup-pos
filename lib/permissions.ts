@@ -36,6 +36,9 @@ export const API_RULES: ApiRule[] = [
   { prefix: "/api/inventory", roles: STAFF },
   { prefix: "/api/products", methods: ["POST", "PUT", "PATCH", "DELETE"], roles: STAFF },
   { prefix: "/api/products", roles: ALL },
+  { prefix: "/api/uploads", roles: STAFF },
+  { prefix: "/api/categories", methods: ["POST", "PUT", "PATCH", "DELETE"], roles: STAFF },
+  { prefix: "/api/categories", roles: ALL },
   { prefix: "/api/sales", roles: ALL },
 ];
 
