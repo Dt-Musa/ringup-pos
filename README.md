@@ -31,7 +31,7 @@ Production build: `npm run build && npm start` (set `SESSION_COOKIE_SECURE=false
 
 ### Demo accounts
 
-All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`**). Change it for any real deployment.
+All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`**). Change it for any real deployment. Expected to change 
 
 | Email | Role | Can open |
 |-------|------|----------|
