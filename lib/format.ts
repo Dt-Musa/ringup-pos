@@ -18,3 +18,7 @@ export const PAYMENT_LABELS: Record<string, string> = {
   CARD: "Card",
   BANK_TRANSFER: "Bank Transfer",
 };
+
+export function formatNumber(n: number) {
+  return n.toLocaleString("en-US");
+}
