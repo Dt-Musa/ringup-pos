@@ -1,6 +1,6 @@
-# DVN POS
+# RingUp
 
-A web-based Point of Sale for a small shop (DVN Programming Challenge). **Phase 1 – foundation:** database schema, authentication, role-based access control, app shell with placeholder pages.
+RingUp is a web-based Point of Sale for a small shop (DVN Programming Challenge). **Phase 1 – foundation:** database schema, authentication, role-based access control, app shell with placeholder pages.
 
 **Stack:** Next.js 16 (App Router, TypeScript, Tailwind v4) · PostgreSQL · Prisma 6 · iron-session (encrypted cookie sessions) · bcryptjs password hashing · Zod. Currency: **UGX** (stored as whole integers).
 

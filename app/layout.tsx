@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DVN POS",
+  title: "RingUp",
   description: "Point of sale, inventory and sales reporting",
 };
 

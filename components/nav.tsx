@@ -16,7 +16,7 @@ export function Sidebar({ items, userName, role }: { items: NavItem[]; userName:
 
   return (
     <aside className="flex w-56 shrink-0 flex-col bg-zinc-900 text-zinc-100">
-      <div className="px-5 py-5 text-lg font-semibold">DVN POS</div>
+      <div className="px-5 py-5 text-lg font-semibold">RingUp</div>
       <nav className="flex-1 space-y-1 px-3">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -31,7 +31,7 @@ export function Sidebar({ items, userName, role }: { items: NavItem[]; userName:
           );
         })}
       </nav>
-      <div className="border-t border-zinc-800 p-4 text-sm">
+      <div className="border-t border-zinc-800 p-4 pb-16 text-sm">
         <div className="font-medium">{userName}</div>
         <div className="text-xs uppercase tracking-wide text-zinc-400">{role}</div>
         <button onClick={logout} className="mt-3 w-full rounded-md bg-zinc-800 px-3 py-2 text-left hover:bg-zinc-700">
