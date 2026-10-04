@@ -76,6 +76,12 @@ Defined once in `lib/permissions.ts` (page nav table + API rule table) and enfor
 
 API (all bodies validated with Zod; errors are `{ error, fieldErrors? }`): `GET/POST /api/products`, `GET/PATCH/DELETE /api/products/:id` (DELETE = deactivate), `GET/POST /api/categories`, `PATCH /api/categories/:id`, `POST /api/uploads` (multipart `file`). Cashiers can read active products/categories (for the POS) but every write returns 403.
 
+### Phase 3 – POS and sales (all roles)
+
+`/pos`: instant search (name/SKU; Enter adds an exact-SKU or single match, handy for barcode scanners), category chips, product grid (active products only; out-of-stock tiles disabled), cart with quantity (capped at stock), discount (fixed UGX or %, never above the subtotal), payment method (Cash with amount tendered and change; Mobile Money / Card / Bank Transfer with optional reference). Completing a sale shows a printable receipt; `/sales/:id/receipt` is the same receipt as a page (print stylesheet prints only the receipt). `/sales` lists sales — cashiers see only their own (other cashiers' receipts return 404), Admin/Manager see all.
+
+`POST /api/sales` accepts only `{ items: [{ productId, qty }], discount?, paymentMethod, amountTendered?, paymentReference? }` – **prices and totals are never taken from the client**. In one DB transaction it atomically decrements stock (`UPDATE … WHERE stockQty >= qty RETURNING price, cost`, so concurrent sales can't oversell), snapshots unit price/cost into `SaleItem`, writes a `SALE` StockMovement per item and assigns a sequential receipt number (`RU-000001`, from the `receipt_no_seq` Postgres sequence; a rolled-back sale can leave a gap). Errors: 400 validation, 409 insufficient stock / inactive product (`code` field), 404 unknown product. `GET /api/sales`, `GET /api/sales/:id`.
+
 Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
 
 ## Schema (`prisma/schema.prisma`)
@@ -104,4 +110,4 @@ lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
 
 ## Roadmap
 
-Phase 2 (done): product & category management. Next: inventory movements, POS checkout. Phase 3: sales history, refunds, receipts. Phase 4: dashboard, reports, user management.
+Phase 2 (done): product & category management. Phase 3 (done): POS checkout, receipts, sales list. Next: inventory movements, refunds. Phase 4: inventory screen, refunds. Phase 5: dashboard, reports, user management.
