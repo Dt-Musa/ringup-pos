@@ -10,7 +10,7 @@ import path from "node:path";
 export const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES) || 2 * 1024 * 1024;
 
 export function uploadDir() {
-  return path.resolve(process.cwd(), process.env.UPLOAD_DIR || "./uploads");
+  return path.resolve(/* turbopackIgnore: true */ process.cwd(), process.env.UPLOAD_DIR || "./uploads");
 }
 
 const TYPES: { ext: "jpg" | "png" | "webp" | "gif"; mime: string; test: (b: Buffer) => boolean }[] = [
@@ -38,8 +38,9 @@ export async function saveImage(file: File): Promise<string> {
   const type = TYPES.find((t) => t.test(buf));
   if (!type) throw new UploadError("Unsupported file type. Use a JPG, PNG, WebP or GIF image");
   const name = `${randomUUID()}.${type.ext}`;
-  await mkdir(uploadDir(), { recursive: true });
-  await writeFile(path.join(uploadDir(), name), buf);
+  const dir = uploadDir();
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(/* turbopackIgnore: true */ dir, name), buf);
   return `/uploads/${name}`;
 }
 
@@ -47,7 +48,7 @@ export async function readImage(name: string): Promise<{ data: Buffer; mime: str
   const m = /^[a-f0-9-]{36}\.(jpg|png|webp|gif)$/.exec(name);
   if (!m) return null;
   try {
-    return { data: await readFile(path.join(uploadDir(), name)), mime: MIME_BY_EXT[m[1]] };
+    return { data: await readFile(path.join(/* turbopackIgnore: true */ uploadDir(), name)), mime: MIME_BY_EXT[m[1]] };
   } catch {
     return null;
   }

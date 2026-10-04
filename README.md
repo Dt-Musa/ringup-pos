@@ -46,6 +46,8 @@ All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`*
 | `DATABASE_URL` | Postgres connection string |
 | `SESSION_SECRET` | ≥32 chars, encrypts the session cookie |
 | `SEED_PASSWORD` | password given to demo users by the seed |
+| `UPLOAD_DIR` | where product images are stored (default `./uploads`; served via `/uploads/<file>`) |
+| `MAX_UPLOAD_BYTES` | max image size, default 2 MB |
 | `SESSION_COOKIE_SECURE` | optional; defaults to `true` in production, `false` in dev |
 
 ### Scripts
@@ -68,7 +70,13 @@ Defined once in `lib/permissions.ts` (page nav table + API rule table) and enfor
 | `GET /api/products` | yes | yes | yes |
 | `POST/PUT/PATCH/DELETE /api/products` | yes | yes | no |
 
-Existing endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
+### Phase 2 – product management (Admin/Manager)
+
+`/products`: search by name/SKU, filter by category / active status / stock level, paginated; add, edit, deactivate/reactivate (soft delete – history is never lost); manage categories (add/rename). Creating a product with stock writes an `ADDITION` stock movement ("Initial stock"); changing the stock on edit writes an `ADJUSTMENT` for the difference. Images are validated by file signature (JPG/PNG/WebP/GIF, ≤ `MAX_UPLOAD_BYTES`) and stored in `UPLOAD_DIR`; on a host with an ephemeral disk, point `UPLOAD_DIR` at a persistent volume or replace `lib/uploads.ts` with object storage.
+
+API (all bodies validated with Zod; errors are `{ error, fieldErrors? }`): `GET/POST /api/products`, `GET/PATCH/DELETE /api/products/:id` (DELETE = deactivate), `GET/POST /api/categories`, `PATCH /api/categories/:id`, `POST /api/uploads` (multipart `file`). Cashiers can read active products/categories (for the POS) but every write returns 403.
+
+Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
 
 ## Schema (`prisma/schema.prisma`)
 
@@ -96,4 +104,4 @@ lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
 
 ## Roadmap
 
-Phase 2: products CRUD, inventory movements, POS checkout. Phase 3: sales history, refunds, receipts. Phase 4: dashboard, reports, user management.
+Phase 2 (done): product & category management. Next: inventory movements, POS checkout. Phase 3: sales history, refunds, receipts. Phase 4: dashboard, reports, user management.
