@@ -25,31 +25,53 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* ---- Printing: only the element marked .print-area is printed (receipt page or POS receipt modal) ---- */
+/* ---- Printing: only the element marked .print-area (the receipt) is printed, on one 80mm-wide page.
+   Everything else is removed from layout (display:none, not just hidden) so it can't create extra pages. ---- */
 @media print {
   @page {
-    margin: 8mm;
+    size: 80mm auto; /* thermal-style roll; Chrome falls back to a single sheet if "auto" is unsupported */
+    margin: 4mm;
   }
-  body * {
-    visibility: hidden;
+  html,
+  body {
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
   }
-  .print-area,
-  .print-area * {
-    visibility: visible;
+  /* hide everything that is neither the receipt, one of its ancestors, nor inside it */
+  body *:not(.print-area):not(:has(.print-area)):not(.print-area *) {
+    display: none !important;
+  }
+  /* neutralise layout on the receipt's ancestors (app shell, <main>, modal wrappers, dialog) */
+  body *:has(.print-area) {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
   }
   .print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    width: 72mm !important; /* 80mm paper minus margins */
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
     box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .no-print {
     display: none !important;
-  }
-  .print-reset {
-    position: static !important;
-    overflow: visible !important;
-    background: transparent !important;
   }
 }

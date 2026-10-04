@@ -110,4 +110,8 @@ lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
 
 ## Roadmap
 
-Phase 2 (done): product & category management. Phase 3 (done): POS checkout, receipts, sales list. Next: inventory movements, refunds. Phase 4: inventory screen, refunds. Phase 5: dashboard, reports, user management.
+- **Phase 1 (done):** schema, auth, roles, app shell.
+- **Phase 2 (done):** product and category management.
+- **Phase 3 (done):** POS checkout, receipts, sales list.
+- **Phase 4:** inventory screen (stock movements/adjustments), refunds and voids.
+- **Phase 5:** dashboard, reports, user management.
