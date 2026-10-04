@@ -24,3 +24,32 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* ---- Printing: only the element marked .print-area is printed (receipt page or POS receipt modal) ---- */
+@media print {
+  @page {
+    margin: 8mm;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-reset {
+    position: static !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+}

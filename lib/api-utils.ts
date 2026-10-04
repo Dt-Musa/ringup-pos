@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import type { ZodType, z } from "zod";
 
-export function errorResponse(message: string, status = 400, fieldErrors?: Record<string, string[]>) {
-  return NextResponse.json({ error: message, ...(fieldErrors ? { fieldErrors } : {}) }, { status });
+export function errorResponse(message: string, status = 400, fieldErrors?: Record<string, string[]>, code?: string) {
+  return NextResponse.json({ error: message, ...(code ? { code } : {}), ...(fieldErrors ? { fieldErrors } : {}) }, { status });
 }
 
 /** Validates the JSON body. Returns the typed data or a ready-to-return 400 response. */
