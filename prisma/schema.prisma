@@ -111,17 +111,18 @@ model StockMovement {
 }
 
 model Sale {
-  id             String        @id @default(cuid())
-  receiptNo      String        @unique
-  cashierId      String
-  status         SaleStatus    @default(COMPLETED)
-  subtotal       Int
-  discount       Int           @default(0)
-  total          Int
-  paymentMethod  PaymentMethod
-  amountTendered Int?
-  notes          String?
-  createdAt      DateTime      @default(now())
+  id               String        @id @default(cuid())
+  receiptNo        String        @unique
+  cashierId        String
+  status           SaleStatus    @default(COMPLETED)
+  subtotal         Int
+  discount         Int           @default(0)
+  total            Int
+  paymentMethod    PaymentMethod
+  amountTendered   Int?
+  paymentReference String? // optional: mobile-money / bank / card reference
+  notes            String?
+  createdAt        DateTime      @default(now())
 
   cashier        User            @relation(fields: [cashierId], references: [id])
   items          SaleItem[]
