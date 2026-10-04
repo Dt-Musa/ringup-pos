@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { apiAuth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { validate } from "@/lib/api-utils";
+import { getInventorySummary, listInventory } from "@/lib/inventory";
+import { listInventorySchema } from "@/lib/validation/inventory";
 
-// ADMIN / MANAGER only. Lists stock levels; stock movements arrive in a later phase.
-export async function GET() {
+// ADMIN / MANAGER. Stock overview + summary cards. (Active products only.)
+export async function GET(request: Request) {
   const auth = await apiAuth(["ADMIN", "MANAGER"]);
   if (!auth.ok) return auth.response;
-  const items = await prisma.product.findMany({
-    select: { id: true, sku: true, name: true, stockQty: true, minStock: true },
-    orderBy: { name: "asc" },
-  });
-  return NextResponse.json({ items });
+  const parsed = validate(listInventorySchema, Object.fromEntries(new URL(request.url).searchParams));
+  if (!parsed.ok) return parsed.response;
+  const [summary, list] = await Promise.all([getInventorySummary(), listInventory(parsed.data)]);
+  return NextResponse.json({ summary, ...list });
 }

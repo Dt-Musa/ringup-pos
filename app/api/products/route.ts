@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       const p = await tx.product.create({ data, include: { category: { select: { id: true, name: true } } } });
       if (data.stockQty > 0) {
         await tx.stockMovement.create({
-          data: { productId: p.id, type: "ADDITION", qty: data.stockQty, reason: "Initial stock", userId: auth.user.id },
+          data: { productId: p.id, type: "ADDITION", qty: data.stockQty, qtyBefore: 0, qtyAfter: data.stockQty, reason: "Initial stock", userId: auth.user.id },
         });
       }
       return p;

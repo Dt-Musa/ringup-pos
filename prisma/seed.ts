@@ -62,7 +62,7 @@ async function main() {
       const p = await prisma.product.create({ data: { sku, ...data, stockQty } });
       if (stockQty > 0) {
         await prisma.stockMovement.create({
-          data: { productId: p.id, type: StockMovementType.ADDITION, qty: stockQty, reason: "Opening stock (seed)", userId: admin.id },
+          data: { productId: p.id, type: StockMovementType.ADDITION, qty: stockQty, qtyBefore: 0, qtyAfter: stockQty, reason: "Opening stock (seed)", userId: admin.id },
         });
       }
     }

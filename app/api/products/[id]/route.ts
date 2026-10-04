@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiAuth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { errorResponse, isUniqueViolation, parseJson } from "@/lib/api-utils";
+import { applyStockAction } from "@/lib/inventory";
 import { updateProductSchema } from "@/lib/validation/product";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -33,22 +34,18 @@ export async function PATCH(request: Request, { params }: Ctx) {
   }
 
   try {
+    const { stockQty, ...rest } = data;
     const product = await prisma.$transaction(async (tx) => {
       const existing = await tx.product.findUnique({ where: { id } });
       if (!existing) return null;
-      const updated = await tx.product.update({ where: { id }, data, include });
-      if (data.stockQty !== undefined && data.stockQty !== existing.stockQty) {
-        await tx.stockMovement.create({
-          data: {
-            productId: id,
-            type: "ADJUSTMENT",
-            qty: data.stockQty - existing.stockQty,
-            reason: `Stock corrected from ${existing.stockQty} to ${data.stockQty} (product edit)`,
-            userId: auth.user.id,
-          },
+      if (Object.keys(rest).length) await tx.product.update({ where: { id }, data: rest });
+      if (stockQty !== undefined) {
+        // atomic, row-locked adjustment that also records a StockMovement (before/after)
+        await applyStockAction(tx, { action: "ADJUST", productId: id, countedQty: stockQty, reason: "Stock corrected (product edit)" }, auth.user.id, {
+          allowNoop: true,
         });
       }
-      return updated;
+      return tx.product.findUnique({ where: { id }, include });
     });
     if (!product) return errorResponse("Product not found", 404);
     return NextResponse.json({ product });

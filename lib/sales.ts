@@ -41,14 +41,14 @@ export async function createSale(input: CreateSaleInput, cashierId: string) {
 
   return prisma.$transaction(
     async (tx) => {
-      const priced: { productId: string; qty: number; unitPrice: number; unitCost: number; name: string }[] = [];
+      const priced: { productId: string; qty: number; unitPrice: number; unitCost: number; name: string; after: number }[] = [];
 
       for (const [productId, qty] of lines) {
-        const rows = await tx.$queryRaw<{ id: string; name: string; sellingPrice: number; buyingCost: number }[]>`
+        const rows = await tx.$queryRaw<{ id: string; name: string; sellingPrice: number; buyingCost: number; stockQty: number }[]>`
           UPDATE "Product"
              SET "stockQty" = "stockQty" - ${qty}, "updatedAt" = now()
            WHERE id = ${productId} AND active = true AND "stockQty" >= ${qty}
-          RETURNING id, name, "sellingPrice", "buyingCost"`;
+          RETURNING id, name, "sellingPrice", "buyingCost", "stockQty"`;
         if (rows.length === 0) {
           const p = await tx.product.findUnique({ where: { id: productId }, select: { name: true, active: true, stockQty: true } });
           if (!p) throw new SaleError("A product in the cart no longer exists. Refresh and try again.", 404, undefined, "PRODUCT_NOT_FOUND");
@@ -61,7 +61,7 @@ export async function createSale(input: CreateSaleInput, cashierId: string) {
           );
         }
         const r = rows[0];
-        priced.push({ productId, qty, unitPrice: Number(r.sellingPrice), unitCost: Number(r.buyingCost), name: r.name });
+        priced.push({ productId, qty, unitPrice: Number(r.sellingPrice), unitCost: Number(r.buyingCost), name: r.name, after: r.stockQty });
       }
 
       const subtotal = priced.reduce((s, l) => s + l.unitPrice * l.qty, 0);
@@ -115,6 +115,8 @@ export async function createSale(input: CreateSaleInput, cashierId: string) {
           productId: l.productId,
           type: "SALE" as const,
           qty: -l.qty,
+          qtyBefore: l.after + l.qty,
+          qtyAfter: l.after,
           reason: `Sale ${receiptNo}`,
           userId: cashierId,
           saleId: sale.id,
