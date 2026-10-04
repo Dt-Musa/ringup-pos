@@ -40,7 +40,7 @@ export function InventoryFilters({ categories }: { categories: { id: string; nam
         aria-label="Search inventory"
         className={`${inputCls} mt-0 max-w-xs flex-1`}
       />
-      <select aria-label="Filter by category" value={params.get("categoryId") ?? ""} onChange={(e) => update("categoryId", e.target.value)} className={`${inputCls} mt-0 w-auto`}>
+      <select aria-label="Filter by category" value={params.get("categoryId") ?? ""} onChange={(e) => update("categoryId", e.target.value)} className={`${inputCls.replace("w-full", "")} mt-0`}>
         <option value="">All categories</option>
         {categories.map((c) => (
           <option key={c.id} value={c.id}>

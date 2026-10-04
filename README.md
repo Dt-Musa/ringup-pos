@@ -82,6 +82,14 @@ API (all bodies validated with Zod; errors are `{ error, fieldErrors? }`): `GET/
 
 `POST /api/sales` accepts only `{ items: [{ productId, qty }], discount?, paymentMethod, amountTendered?, paymentReference? }` – **prices and totals are never taken from the client**. In one DB transaction it atomically decrements stock (`UPDATE … WHERE stockQty >= qty RETURNING price, cost`, so concurrent sales can't oversell), snapshots unit price/cost into `SaleItem`, writes a `SALE` StockMovement per item and assigns a sequential receipt number (`RU-000001`, from the `receipt_no_seq` Postgres sequence; a rolled-back sale can leave a gap). Errors: 400 validation, 409 insufficient stock / inactive product (`code` field), 404 unknown product. `GET /api/sales`, `GET /api/sales/:id`.
 
+### Phase 4a – inventory (Admin/Manager)
+
+`/inventory` (cashiers are redirected; the APIs return 403): summary cards (active products, low, out, inventory value at cost, potential retail value), a low/out-of-stock alert banner (also on the dashboard), and a searchable stock table filterable by category and All/Low/Out. *Low* = stock > 0 and ≤ min stock; *Out* = stock ≤ 0. Only active products are counted. Per-product actions: **Add stock** (receiving; optional unit cost, optionally updating the product's buying cost), **Reduce stock** (damage/expiry/loss…, reason required, cannot go below 0) and **Adjust** (set to the counted quantity, reason required). `/inventory/history` lists every movement with before → after quantities, filterable by product, type, user and date range (dates are East Africa Time) and paginated.
+
+Each action is one `UPDATE … RETURNING` on the product row inside a transaction that also writes the `StockMovement` (type, signed qty, `qtyBefore`, `qtyAfter`, reason, user). Row locking makes concurrent sales/adjustments safe: stock never goes negative and the movement chain always adds up. Editing a product's stock on the Products page uses the same code path.
+
+API: `GET /api/inventory` (overview + summary), `GET/POST /api/inventory/movements` (history / `{ action: "ADD"|"REDUCE"|"ADJUST", productId, qty | countedQty, reason, unitCost?, updateBuyingCost? }`).
+
 Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
 
 ## Schema (`prisma/schema.prisma`)
@@ -113,5 +121,6 @@ lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
 - **Phase 1 (done):** schema, auth, roles, app shell.
 - **Phase 2 (done):** product and category management.
 - **Phase 3 (done):** POS checkout, receipts, sales list.
-- **Phase 4:** inventory screen (stock movements/adjustments), refunds and voids.
+- **Phase 4a (done):** inventory overview, stock actions, stock history, low-stock alerts.
+- **Phase 4b:** refunds and voids.
 - **Phase 5:** dashboard, reports, user management.
