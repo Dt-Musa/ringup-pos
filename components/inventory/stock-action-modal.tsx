@@ -9,8 +9,8 @@ export type StockAction = "ADD" | "REDUCE" | "ADJUST";
 export type StockTarget = { id: string; name: string; sku: string; stockQty: number; buyingCost: number };
 
 const REASONS: Record<Exclude<StockAction, "ADD">, string[]> = {
-  REDUCE: ["Damaged", "Expired", "Lost / stolen", "Used internally", "Returned to supplier", "Other"],
-  ADJUST: ["Stock count", "Found stock", "Correction", "Other"],
+  REDUCE: ["Damaged", "Expired", "Lost / stolen", "Used internally", "Returned to supplier"],
+  ADJUST: ["Stock count", "Found stock", "Correction"],
 };
 
 const TITLES: Record<StockAction, string> = { ADD: "Add stock", REDUCE: "Reduce stock", ADJUST: "Adjust stock (stock take)" };
@@ -18,8 +18,7 @@ const TITLES: Record<StockAction, string> = { ADD: "Add stock", REDUCE: "Reduce 
 export function StockActionModal({ action, product, onClose }: { action: StockAction; product: StockTarget; onClose: () => void }) {
   const router = useRouter();
   const [qty, setQty] = useState("");
-  const [preset, setPreset] = useState(action === "ADD" ? "" : REASONS[action][0]);
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(""); // ADD: optional note; REDUCE/ADJUST: required reason
   const [unitCost, setUnitCost] = useState("");
   const [updateCost, setUpdateCost] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -35,7 +34,13 @@ export function StockActionModal({ action, product, onClose }: { action: StockAc
     setSaving(true);
     setError(null);
     setFieldErrors({});
-    const reason = [action === "ADD" ? "" : preset === "Other" ? "" : preset, note.trim()].filter(Boolean).join(": ");
+    const reason = note.trim();
+    if (action !== "ADD" && reason.length < 3) {
+      setSaving(false);
+      setFieldErrors({ reason: ["Please give a reason (at least 3 characters)"] });
+      setError("A reason is required");
+      return;
+    }
     const num = (v: string) => (v.trim() === "" ? "" : Number(v)); // "" -> clear "must be a number" error from the API
     const body =
       action === "ADD"
@@ -120,21 +125,33 @@ export function StockActionModal({ action, product, onClose }: { action: StockAc
           </>
         )}
 
-        {action !== "ADD" && (
+        {action === "ADD" ? (
           <label className="block text-sm font-medium">
-            Reason *
-            <select name="preset" value={preset} onChange={(e) => setPreset(e.target.value)} className={inputCls}>
+            Note / supplier (optional)
+            <input name="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className={inputCls} />
+            {fieldErrors.reason?.[0] && <span className="mt-1 block text-xs font-normal text-red-600">{fieldErrors.reason[0]}</span>}
+          </label>
+        ) : (
+          <label className="block text-sm font-medium">
+            Reason (required)
+            <input
+              name="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={200}
+              required
+              list={`reasons-${action}`}
+              placeholder={action === "REDUCE" ? "e.g. Damaged, Expired, Lost" : "e.g. Stock count"}
+              className={inputCls}
+            />
+            <datalist id={`reasons-${action}`}>
               {REASONS[action].map((r) => (
-                <option key={r}>{r}</option>
+                <option key={r} value={r} />
               ))}
-            </select>
+            </datalist>
+            {fieldErrors.reason?.[0] && <span className="mt-1 block text-xs font-normal text-red-600">{fieldErrors.reason[0]}</span>}
           </label>
         )}
-        <label className="block text-sm font-medium">
-          {action === "ADD" ? "Note / supplier (optional)" : preset === "Other" ? "Describe the reason *" : "Note (optional)"}
-          <input name="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className={inputCls} />
-          {fieldErrors.reason?.[0] && <span className="mt-1 block text-xs font-normal text-red-600">{fieldErrors.reason[0]}</span>}
-        </label>
 
         <div className="flex justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <button type="button" onClick={onClose} className={btnSecondary}>
