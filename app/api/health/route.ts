@@ -16,15 +16,25 @@ export async function GET() {
 
   try {
     const [userCount, productCount] = await Promise.all([prisma.user.count(), prisma.product.count()]);
-    const ok = base.sessionSecretLongEnough && base.hasDatabaseUrl;
+    // Probe the newest columns: catches a stale generated Prisma client (needs `prisma generate` + restart)
+    // or migrations that have not been applied (`prisma migrate deploy`).
+    let schema: "ok" | "mismatch" = "ok";
+    try {
+      await prisma.sale.aggregate({ _sum: { refundedAmount: true } });
+      await prisma.stockMovement.findFirst({ select: { qtyAfter: true } });
+    } catch {
+      schema = "mismatch";
+      console.error("[health] schema mismatch: run `prisma generate`, `prisma migrate deploy` and restart the server");
+    }
+    const ok = base.sessionSecretLongEnough && base.hasDatabaseUrl && schema === "ok";
     return NextResponse.json(
-      { ok, db: "connected", userCount, productCount, ...base },
+      { ok, db: "connected", schema, userCount, productCount, ...base },
       { status: ok ? 200 : 503, headers: { "Cache-Control": "no-store" } },
     );
   } catch {
     console.error("[health] database check failed");
     return NextResponse.json(
-      { ok: false, db: "error", userCount: null, productCount: null, ...base, message: "Database unavailable" },
+      { ok: false, db: "error", schema: "unknown", userCount: null, productCount: null, ...base, message: "Database unavailable" },
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }

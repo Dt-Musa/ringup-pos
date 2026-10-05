@@ -24,8 +24,10 @@ npm run db:deploy           # applies migrations (use `npm run db:migrate` while
 npm run db:seed
 
 # 3. Run
-npm run dev                 # http://localhost:3000
+npm run dev                 # http://localhost:3000 (runs `prisma generate` first)
 ```
+
+> **After any change to `prisma/schema.prisma` or a `git pull` with new migrations:** run `npm run db:migrate` (dev) or `npm run db:deploy` (prod), then **restart the dev/prod server**. A running server keeps the old generated Prisma client in memory and fails with errors like `Unknown field … for select statement`. `npm run dev` and `npm run build` regenerate the client automatically (`predev` / `prebuild`, plus `postinstall`), and `GET /api/health` reports `schema: "mismatch"` when the client or DB is out of date.
 
 Production build: `npm run build && npm start` (set `SESSION_COOKIE_SECURE=false` if you serve it over plain HTTP outside localhost).
 
