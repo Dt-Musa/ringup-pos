@@ -40,6 +40,7 @@ export const API_RULES: ApiRule[] = [
   { prefix: "/api/categories", methods: ["POST", "PUT", "PATCH", "DELETE"], roles: STAFF },
   { prefix: "/api/categories", roles: ALL },
   { prefix: "/api/sales", roles: ALL },
+  { prefix: "/api/refunds", roles: STAFF },
 ];
 
 function matches(pathname: string, prefix: string) {

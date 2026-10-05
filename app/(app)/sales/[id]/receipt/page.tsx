@@ -4,12 +4,12 @@ import { PrintButton } from "@/components/print-button";
 import { Receipt, toReceiptSale } from "@/components/receipt";
 import { guardPage } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { saleInclude } from "@/lib/sales";
+import { saleDetailInclude } from "@/lib/sales-query";
 
 export default async function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await guardPage("/sales");
   const { id } = await params;
-  const sale = await prisma.sale.findUnique({ where: { id }, include: saleInclude });
+  const sale = await prisma.sale.findUnique({ where: { id }, include: saleDetailInclude });
   // cashiers can only open their own receipts
   if (!sale || (user.role === "CASHIER" && sale.cashierId !== user.id)) notFound();
 

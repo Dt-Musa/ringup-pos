@@ -13,6 +13,8 @@ export type ReceiptSale = {
   discount: number;
   total: number;
   items: { id: string; name: string; sku: string; qty: number; unitPrice: number; lineTotal: number }[];
+  refundedAmount?: number;
+  refunds?: { id: string; createdAt: string | Date; amount: number; reason: string | null; method: string | null; items: { name: string; qty: number; amount: number }[] }[];
 };
 
 /** Narrow, thermal-printer-friendly receipt. Wrap in a `.print-area` to print only this. */
@@ -94,6 +96,31 @@ export function Receipt({ sale }: { sale: ReceiptSale }) {
           </div>
         </>
       )}
+      {sale.refunds && sale.refunds.length > 0 && (
+        <>
+          <div className="my-3 border-t border-dashed border-black" />
+          <div className="font-bold">REFUNDS</div>
+          {sale.refunds.map((r) => (
+            <div key={r.id} className="mt-1">
+              <div className="flex justify-between text-xs">
+                <span>{formatDateTime(r.createdAt)}</span>
+                <span className="font-bold">-{formatUGX(r.amount)}</span>
+              </div>
+              {r.items.map((i, idx) => (
+                <div key={idx} className="text-xs text-zinc-600">
+                  {i.qty} × {i.name}
+                </div>
+              ))}
+              {r.reason && <div className="text-xs">Reason: {r.reason}</div>}
+              {r.method && <div className="text-xs">Paid back: {r.method}</div>}
+            </div>
+          ))}
+          <div className="mt-2 flex justify-between text-base font-bold">
+            <span>NET TOTAL</span>
+            <span>{formatUGX(sale.total - (sale.refundedAmount ?? 0))}</span>
+          </div>
+        </>
+      )}
       <div className="mt-4 text-center text-xs">Goods sold are not returnable without a receipt</div>
     </div>
   );
@@ -111,6 +138,15 @@ export function toReceiptSale(s: {
   total: number;
   cashier: { name: string };
   items: { id: string; qty: number; unitPrice: number; lineTotal: number; product: { name: string; sku: string } }[];
+  refundedAmount?: number;
+  refunds?: {
+    id: string;
+    createdAt: Date | string;
+    amount: number;
+    reason: string | null;
+    method: string | null;
+    items: { qty: number; amount: number; saleItem: { product: { name: string } } }[];
+  }[];
 }): ReceiptSale {
   return {
     receiptNo: s.receiptNo,
@@ -124,5 +160,14 @@ export function toReceiptSale(s: {
     discount: s.discount,
     total: s.total,
     items: s.items.map((i) => ({ id: i.id, name: i.product.name, sku: i.product.sku, qty: i.qty, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
+    refundedAmount: s.refundedAmount ?? 0,
+    refunds: s.refunds?.map((r) => ({
+      id: r.id,
+      createdAt: typeof r.createdAt === "string" ? r.createdAt : r.createdAt.toISOString(),
+      amount: r.amount,
+      reason: r.reason,
+      method: r.method,
+      items: r.items.map((i) => ({ name: i.saleItem.product.name, qty: i.qty, amount: i.amount })),
+    })),
   };
 }

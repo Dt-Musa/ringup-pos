@@ -2,6 +2,7 @@ import { PageHeader, Placeholder } from "@/components/page-header";
 import { requireUser } from "@/lib/auth";
 import { StockAlertBanner } from "@/components/inventory/alert-banner";
 import { prisma } from "@/lib/db";
+import { startOfTodayEAT } from "@/lib/dates";
 import { getInventorySummary, listAlerts } from "@/lib/inventory";
 import { formatUGX } from "@/lib/format";
 
@@ -9,8 +10,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const user = await requireUser();
   const { denied } = await searchParams;
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  const startOfDay = startOfTodayEAT();
   const isStaff = user.role !== "CASHIER";
   const [summary, alerts, today] = await Promise.all([
     getInventorySummary(),
@@ -18,17 +18,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     prisma.sale.aggregate({
       where: {
         createdAt: { gte: startOfDay },
-        status: { in: ["COMPLETED", "PARTIALLY_REFUNDED"] },
+        status: { not: "VOIDED" },
         ...(user.role === "CASHIER" ? { cashierId: user.id } : {}),
       },
-      _sum: { total: true },
+      _sum: { total: true, refundedAmount: true },
       _count: true,
     }),
   ]);
 
   const cards = [
     { label: user.role === "CASHIER" ? "My sales today" : "Sales today", value: String(today._count) },
-    { label: user.role === "CASHIER" ? "My revenue today" : "Revenue today", value: formatUGX(today._sum.total ?? 0) },
+    { label: user.role === "CASHIER" ? "My net revenue today" : "Net revenue today (after refunds)", value: formatUGX((today._sum.total ?? 0) - (today._sum.refundedAmount ?? 0)) },
     { label: "Active products", value: String(summary.totalProducts) },
     { label: "Low stock", value: String(summary.lowStock), tone: summary.lowStock ? "text-amber-600" : "" },
     { label: "Out of stock", value: String(summary.outOfStock), tone: summary.outOfStock ? "text-red-600" : "" },

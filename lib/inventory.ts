@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
+import { dayRangeEAT } from "./dates";
 import { SaleError } from "./sales";
 import type { z } from "zod";
 import type { listInventorySchema, listMovementsSchema, StockActionInput } from "./validation/inventory";
@@ -175,20 +176,13 @@ export async function listInventory(f: InventoryFilters) {
 
 type MovementFilters = z.infer<typeof listMovementsSchema>;
 
-// Dates are interpreted in the shop's timezone (East Africa Time, UTC+3).
-const TZ = "+03:00";
-
 export async function listMovements(f: MovementFilters) {
   const where: Prisma.StockMovementWhereInput = {};
   if (f.productId) where.productId = f.productId;
   if (f.type) where.type = f.type;
   if (f.userId) where.userId = f.userId;
-  if (f.from || f.to) {
-    where.createdAt = {
-      ...(f.from ? { gte: new Date(`${f.from}T00:00:00.000${TZ}`) } : {}),
-      ...(f.to ? { lte: new Date(`${f.to}T23:59:59.999${TZ}`) } : {}),
-    };
-  }
+  const range = dayRangeEAT(f.from, f.to);
+  if (range) where.createdAt = range;
   const [total, movements] = await Promise.all([
     prisma.stockMovement.count({ where }),
     prisma.stockMovement.findMany({
