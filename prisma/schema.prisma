@@ -126,6 +126,7 @@ model Sale {
   amountTendered   Int?
   paymentReference String? // optional: mobile-money / bank / card reference
   notes            String?
+  refundedAmount   Int           @default(0) // sum of Refund.amount; net revenue = total - refundedAmount
   createdAt        DateTime      @default(now())
 
   cashier        User            @relation(fields: [cashierId], references: [id])
@@ -159,8 +160,9 @@ model Refund {
   id        String   @id @default(cuid())
   saleId    String
   userId    String
-  amount    Int
+  amount    Int // UGX paid back to the customer (discount-adjusted)
   reason    String?
+  method    String? // how the money was returned (note): cash, mobile money reversal…
   createdAt DateTime @default(now())
 
   sale  Sale         @relation(fields: [saleId], references: [id])
@@ -168,6 +170,7 @@ model Refund {
   items RefundItem[]
 
   @@index([saleId])
+  @@index([createdAt])
 }
 
 model RefundItem {
@@ -175,10 +178,13 @@ model RefundItem {
   refundId   String
   saleItemId String
   qty        Int
-  restock    Boolean @default(true)
+  amount     Int     @default(0) // this line's share of Refund.amount
+  restock    Boolean @default(true) // true = goods returned to stock (cost recovered)
 
   refund   Refund   @relation(fields: [refundId], references: [id], onDelete: Cascade)
   saleItem SaleItem @relation(fields: [saleItemId], references: [id])
+
+  @@index([saleItemId])
 }
 
 // ---- Optional bonus: suppliers & purchase orders ----
