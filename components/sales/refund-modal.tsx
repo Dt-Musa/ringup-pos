@@ -138,7 +138,11 @@ export function RefundModal({ sale, onClose }: { sale: RefundSaleInfo; onClose: 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium">
             Reason (required)
-            <input name="reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} list="refund-reasons" placeholder="e.g. Wrong item, Damaged, Customer changed mind" className={inputCls} />
+            <input name="reason" value={reason} onChange={(e) => {
+                setReason(e.target.value);
+                setFieldErrors({});
+                setError(null);
+              }} maxLength={300} list="refund-reasons" placeholder="e.g. Wrong item, Damaged, Customer changed mind" className={inputCls} />
             <datalist id="refund-reasons">
               {["Wrong item", "Damaged / faulty", "Customer changed mind", "Overcharged", "Expired"].map((r) => (
                 <option key={r} value={r} />

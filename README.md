@@ -90,6 +90,14 @@ Each action is one `UPDATE … RETURNING` on the product row inside a transactio
 
 API: `GET /api/inventory` (overview + summary), `GET/POST /api/inventory/movements` (history / `{ action: "ADD"|"REDUCE"|"ADJUST", productId, qty | countedQty, reason, unitCost?, updateBuyingCost? }`).
 
+### Phase 4b – sales management and refunds
+
+`/sales`: filter by receipt number, date range (East Africa Time), cashier (staff), payment method and status; paginated; the cards show count, gross, refunded and net for the **whole filtered set**. Cashiers only ever see their own sales. `/sales/:id`: items (with refunded quantities), totals, payment details, full refund history and a link to the receipt; the receipt also lists refunds and the net total.
+
+**Refunds (Admin/Manager only; cashiers get 403 and see no button)** – `POST /api/refunds { saleId, fullRefund? | items: [{ saleItemId, qty, restock? }], reason (required), method? }`. One transaction: the sale row is locked (`SELECT … FOR UPDATE`) so concurrent refunds are serialised and quantities are re-read after the lock (no double refunds; a refund can never exceed what is still refundable); a `Refund` + `RefundItem`s are created; restocked items go back to stock with an atomic `UPDATE … RETURNING` and a `RETURN` stock movement (before/after); `Sale.refundedAmount` and `Sale.status` (`PARTIALLY_REFUNDED` → `REFUNDED`) are updated. The sale discount is spread proportionally over items, and a full refund always equals the sale total exactly. Untick *Restock* for damaged goods (the cost is then kept as a loss).
+
+**Netting refunds out of reports** – use `lib/finance.ts` (`getFinancials`): `revenue = Σ Sale.total − Σ Sale.refundedAmount` (voided excluded), `COGS = Σ unitCost×qty − Σ unitCost×returned qty that was restocked`, `profit = revenue − COGS`. The dashboard and `GET /api/reports/summary` already use it.
+
 Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
 
 ## Schema (`prisma/schema.prisma`)
@@ -122,5 +130,5 @@ lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
 - **Phase 2 (done):** product and category management.
 - **Phase 3 (done):** POS checkout, receipts, sales list.
 - **Phase 4a (done):** inventory overview, stock actions, stock history, low-stock alerts.
-- **Phase 4b:** refunds and voids.
+- **Phase 4b (done):** sales filters/totals, sale detail, refunds with restock.
 - **Phase 5:** dashboard, reports, user management.
