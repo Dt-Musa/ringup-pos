@@ -14,7 +14,9 @@ type SessionCheck = { user: CurrentUser; stale: false } | { user: null; stale: b
 /**
  * Validates the session cookie against the database. `stale` = a cookie exists but is no longer valid:
  * undecryptable (e.g. SESSION_SECRET rotated), the user was deleted / re-seeded (new id), deactivated, or
- * their role changed since they signed in (the cookie's role is what the proxy trusts, so it must match).
+ * their role changed since they signed in (the cookie's role is what the proxy trusts, so it must match), or
+ * their sessionVersion moved on (password reset, role change, deactivation – see lib/users.ts). Cookies
+ * issued before sessionVersion existed carry none and are treated as stale (one forced re-login).
  */
 export async function checkSession(): Promise<SessionCheck> {
   let session: SessionData;
@@ -27,13 +29,15 @@ export async function checkSession(): Promise<SessionCheck> {
   if (!session.userId) return { user: null, stale: false };
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, email: true, name: true, role: true, active: true },
+    select: { id: true, email: true, name: true, role: true, active: true, sessionVersion: true },
   });
-  if (!user || !user.active || user.role !== session.role) return { user: null, stale: true };
+  if (!user || !user.active || user.role !== session.role || user.sessionVersion !== session.sessionVersion) {
+    return { user: null, stale: true };
+  }
   return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, stale: false };
 }
 
-/** Loads the signed-in user from the DB (so deletion / deactivation / role changes take effect immediately). */
+/** Loads the signed-in user from the DB (so deletion / deactivation / role changes / password resets take effect immediately). */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   return (await checkSession()).user;
 }

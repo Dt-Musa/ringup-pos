@@ -4,6 +4,8 @@
 export const ROLES = ["ADMIN", "MANAGER", "CASHIER"] as const;
 export type Role = (typeof ROLES)[number];
 
+export const ROLE_LABELS: Record<Role, string> = { ADMIN: "Admin", MANAGER: "Manager", CASHIER: "Cashier" };
+
 const ALL: Role[] = ["ADMIN", "MANAGER", "CASHIER"];
 const STAFF: Role[] = ["ADMIN", "MANAGER"];
 const ADMIN: Role[] = ["ADMIN"];
@@ -31,7 +33,7 @@ type ApiRule = { prefix: string; methods?: string[]; roles: Role[] };
 export const API_RULES: ApiRule[] = [
   { prefix: "/api/auth", roles: ALL }, // handled specially (public) in the proxy
   { prefix: "/api/me", roles: ALL },
-  { prefix: "/api/users", roles: ADMIN },
+  { prefix: "/api/users", roles: ADMIN }, // user management (list/create/edit/deactivate/reset password)
   { prefix: "/api/reports", roles: STAFF },
   { prefix: "/api/inventory", roles: STAFF },
   { prefix: "/api/products", methods: ["POST", "PUT", "PATCH", "DELETE"], roles: STAFF },

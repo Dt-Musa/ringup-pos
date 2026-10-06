@@ -12,6 +12,10 @@ export function formatDateTime(d: Date | string) {
   }).format(new Date(d));
 }
 
+export function formatDate(d: Date | string) {
+  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Africa/Kampala" }).format(new Date(d));
+}
+
 export const PAYMENT_LABELS: Record<string, string> = {
   CASH: "Cash",
   MOBILE_MONEY: "Mobile Money",

@@ -1,34 +1,43 @@
 import { PageHeader } from "@/components/page-header";
+import { UserFilters } from "@/components/users/filters";
+import { UsersManager } from "@/components/users/users-manager";
+import type { UserRow } from "@/components/users/types";
 import { guardPage } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { listUsers } from "@/lib/users";
+import { listUsersSchema } from "@/lib/validation/user";
 
-export default async function UsersPage() {
-  await guardPage("/users");
-  const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
+type SP = Record<string, string | string[] | undefined>;
+
+export default async function UsersPage({ searchParams }: { searchParams: Promise<SP> }) {
+  const me = await guardPage("/users"); // ADMIN only
+  const sp = await searchParams;
+  const flat = Object.fromEntries(Object.entries(sp).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
+  const parsed = listUsersSchema.safeParse(flat);
+  const filters = parsed.success ? parsed.data : listUsersSchema.parse({});
+
+  const { users, total } = await listUsers(filters);
+  const rows: UserRow[] = users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    active: u.active,
+    createdAt: u.createdAt.toISOString(),
+    lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
+  }));
+
   return (
     <>
-      <PageHeader title="Users" description="Admin only. Create/edit/deactivate arrives in a later phase." />
-      <div className="overflow-hidden rounded-lg bg-white shadow-sm dark:bg-zinc-900">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-100 text-xs uppercase text-zinc-500 dark:bg-zinc-800">
-            <tr>
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Email</th>
-              <th className="px-4 py-2">Role</th>
-              <th className="px-4 py-2">Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-t border-zinc-100 dark:border-zinc-800">
-                <td className="px-4 py-2">{u.name}</td>
-                <td className="px-4 py-2">{u.email}</td>
-                <td className="px-4 py-2">{u.role}</td>
-                <td className="px-4 py-2">{u.active ? "Yes" : "No"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <PageHeader
+        title="Users"
+        description="Add staff, set their role, reset passwords and deactivate accounts. Users are never deleted, so sales history stays intact."
+      />
+      <UserFilters />
+      <UsersManager users={rows} currentUserId={me.id} />
+      <div className="mt-4 text-sm text-zinc-500">
+        <span data-testid="users-count">
+          {total} user{total === 1 ? "" : "s"}
+        </span>
       </div>
     </>
   );

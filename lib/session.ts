@@ -5,6 +5,8 @@ import type { Role } from "./permissions";
 export type SessionData = {
   userId?: string;
   role?: Role;
+  /** User.sessionVersion at sign-in; a mismatch (or a cookie from before this field existed) = stale session. */
+  sessionVersion?: number;
 };
 
 export const SESSION_COOKIE = "pos_session";

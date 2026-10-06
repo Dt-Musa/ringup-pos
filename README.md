@@ -1,6 +1,6 @@
 # RingUp
 
-RingUp is a web-based Point of Sale for a small shop (DVN Programming Challenge). Products & categories, POS checkout with receipts, inventory with stock history, sales & refunds, and a dashboard with charts plus exportable (CSV/PDF) reports – with role-based access for Admin, Manager and Cashier.
+RingUp is a web-based Point of Sale for a small shop (DVN Programming Challenge). Products & categories, POS checkout with receipts, inventory with stock history, sales & refunds, a dashboard with charts plus exportable (CSV/PDF) reports, and user management – with role-based access for Admin, Manager and Cashier.
 
 **Stack:** Next.js 16 (App Router, TypeScript, Tailwind v4) · PostgreSQL · Prisma 6 · iron-session (encrypted cookie sessions) · bcryptjs password hashing · Zod. Currency: **UGX** (stored as whole integers).
 
@@ -61,7 +61,7 @@ All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`*
 Defined once in `lib/permissions.ts` (page nav table + API rule table) and enforced in three layers:
 
 1. `proxy.ts` (Next 16's replacement for middleware) – reads the encrypted cookie; redirects anonymous users to `/login`, redirects forbidden pages to `/dashboard?denied=1`, returns `401`/`403` JSON for APIs.
-2. Server layouts/pages – `requireUser()` / `guardPage()` in `lib/auth.ts` re-load the user from the DB, so deactivating a user or changing a role takes effect immediately.
+2. Server layouts/pages – `requireUser()` / `guardPage()` in `lib/auth.ts` re-load the user from the DB, so deactivating a user, changing a role or resetting a password takes effect immediately (the session must match the user's current `active`, `role` and `sessionVersion`; otherwise the cookie is cleared and the user is sent to `/login?reason=session`).
 3. Route handlers – `apiAuth([roles])` per endpoint.
 
 | Area | ADMIN | MANAGER | CASHIER |
@@ -71,6 +71,7 @@ Defined once in `lib/permissions.ts` (page nav table + API rule table) and enfor
 | Users | yes | no | no |
 | `GET /api/products` | yes | yes | yes |
 | `POST/PUT/PATCH/DELETE /api/products` | yes | yes | no |
+| `/api/users` (all methods) | yes | no (403) | no (403) |
 
 ### Phase 2 – product management (Admin/Manager)
 
@@ -112,11 +113,22 @@ API: `GET /api/inventory` (overview + summary), `GET/POST /api/inventory/movemen
 
 **Demo sales (optional)** – `npm run db:demo` creates ~30 days of realistic sales (weekday/weekend pattern, mixed payment methods, discounts, ~4% refunds incl. damaged returns, supplier restocks) through the **real** `createSale` / `createRefund` / stock-action code, executed in chronological order and back-dated, so stock levels, stock movements (before/after) and receipt numbers stay consistent. Options: `-- --days 14`, `-- --seed 7` (deterministic), `-- --force` (allow when sales already exist; otherwise it refuses). Undo with `npm run db:reset`.
 
-Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
+### Phase 6 – user management (Admin only)
+
+`/users` (Managers and Cashiers are redirected to `/dashboard?denied=1`; every `/api/users` call returns 403 for them): list with name, email, role, status, created date and last login, search by name/email and filters for role and status. **Add user** (name, email, role, initial password), **Edit** (name, email, role), **Reset password** (the admin sets a new one) and **Deactivate / Reactivate**. Users are never hard-deleted because sales, refunds and stock movements reference them; an inactive user cannot sign in.
+
+- Emails are trimmed, lowercased and unique case-insensitively. Passwords: at least 8 characters with a letter and a number (max 72 bytes, bcrypt's limit), hashed with bcryptjs; hashes are never returned by any API.
+- **Safety rules (server-side, 409 with a clear message and `code`):** an admin can't deactivate their own account (`SELF_DEACTIVATE`) or change their own role (`SELF_DEMOTE`), and the last active Admin can never be deactivated or demoted (`LAST_ADMIN`). These checks run in a transaction behind a Postgres advisory lock, so two admins demoting each other at the same time can't leave the shop without an admin.
+- **Session invalidation:** `User.sessionVersion` is incremented on a password reset, role change or deactivation; sessions store the version they were issued with and `lib/auth.ts` rejects a mismatch, so the user is signed out everywhere on their next request (reactivating does not revive old sessions). An admin resetting their own password stays signed in on the current device only. Sessions issued before this field existed are treated as stale (one forced re-login after upgrading).
+- `User.lastLoginAt` is set on each successful sign-in (without touching `updatedAt`).
+
+API (Zod-validated; errors are `{ error, fieldErrors?, code? }`): `GET /api/users?q=&role=ADMIN|MANAGER|CASHIER&status=active|inactive|all`, `POST /api/users { name, email, role, password }`, `GET /api/users/:id`, `PATCH /api/users/:id { name?, email?, role?, active? }`, `DELETE /api/users/:id` (= deactivate), `POST /api/users/:id/password { password }`.
+
+Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
 
 ## Schema (`prisma/schema.prisma`)
 
-- **User** – email (unique), name, passwordHash (bcrypt), `role` (ADMIN | MANAGER | CASHIER), active.
+- **User** – email (unique, stored lowercase), name, passwordHash (bcrypt), `role` (ADMIN | MANAGER | CASHIER), active, `sessionVersion` (bumped to sign the user out everywhere), `lastLoginAt`.
 - **Category** – name, sortOrder.
 - **Product** – sku (unique), name, image, category, buyingCost, sellingPrice, stockQty, minStock, active.
 - **StockMovement** – product, `type` (SALE | ADDITION | REDUCTION | ADJUSTMENT | RETURN), signed `qty`, reason, user, createdAt; optional link to Sale / PurchaseOrder. Full audit trail of stock changes.
@@ -148,4 +160,4 @@ lib/report-export.ts CSV + pdfkit PDF    components/charts  recharts wrappers
 - **Phase 4a (done):** inventory overview, stock actions, stock history, low-stock alerts.
 - **Phase 4b (done):** sales filters/totals, sale detail, refunds with restock.
 - **Phase 5 (done):** dashboard charts, reports with CSV/PDF export, demo-sales script.
-- **Next:** user management UI.
+- **Phase 6 (done):** user management (add/edit/reset password/deactivate, last-admin protection, session invalidation).

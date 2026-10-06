@@ -22,6 +22,7 @@ export async function GET() {
     try {
       await prisma.sale.aggregate({ _sum: { refundedAmount: true } });
       await prisma.stockMovement.findFirst({ select: { qtyAfter: true } });
+      await prisma.user.findFirst({ select: { sessionVersion: true, lastLoginAt: true } });
     } catch {
       schema = "mismatch";
       console.error("[health] schema mismatch: run `prisma generate`, `prisma migrate deploy` and restart the server");

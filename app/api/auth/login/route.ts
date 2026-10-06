@@ -32,7 +32,13 @@ export async function POST(request: Request) {
     const session = await getSession(); // throws if SESSION_SECRET is missing / too short
     session.userId = user.id;
     session.role = user.role;
+    session.sessionVersion = user.sessionVersion;
     await session.save();
+
+    // Raw SQL so a sign-in doesn't bump updatedAt (which tracks edits to the account). Not fatal if it fails.
+    await prisma.$executeRaw`UPDATE "User" SET "lastLoginAt" = (NOW() AT TIME ZONE 'UTC') WHERE "id" = ${user.id}`.catch(() =>
+      console.warn("[login] could not record lastLoginAt"),
+    );
 
     return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (e) {
