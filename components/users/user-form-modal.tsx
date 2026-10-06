@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { btnPrimary, btnSecondary, inputCls, Modal } from "@/components/ui/modal";
 import { ROLE_LABELS, ROLES, type Role } from "@/lib/permissions";
-import { Field, PASSWORD_HINT, passwordProblem, type FieldErrors } from "./field";
+import { bannerFor, Field, FIX_FIELDS, PASSWORD_HINT, validateUserForm, type FieldErrors } from "./field";
 import type { UserRow } from "./types";
 
 export function UserFormModal({ user, isSelf, onClose }: { user?: UserRow; isSelf?: boolean; onClose: () => void }) {
@@ -23,8 +23,11 @@ export function UserFormModal({ user, isSelf, onClose }: { user?: UserRow; isSel
     e.preventDefault();
     setError(null);
     setFieldErrors({});
-    // An invalid password is reported by the API together with any other field errors.
-    if (!editing && !passwordProblem(password) && password !== confirm) return setFieldErrors({ confirm: ["Passwords don't match"] });
+    const clientErrors = validateUserForm(editing ? { name, email } : { name, email, password, confirm });
+    if (Object.keys(clientErrors).length) {
+      setError(FIX_FIELDS);
+      return setFieldErrors(clientErrors);
+    }
     setSaving(true);
     const body = editing ? { name, email, ...(isSelf ? {} : { role }) } : { name, email, role, password };
     const res = await fetch(editing ? `/api/users/${user.id}` : "/api/users", {
@@ -38,7 +41,7 @@ export function UserFormModal({ user, isSelf, onClose }: { user?: UserRow; isSel
       router.refresh();
       onClose();
     } else {
-      setError(data.error ?? "Could not save the user");
+      setError(bannerFor(res.status, data, "Could not save the user"));
       setFieldErrors(data.fieldErrors ?? {});
     }
   }
@@ -70,7 +73,14 @@ export function UserFormModal({ user, isSelf, onClose }: { user?: UserRow; isSel
                 : "Admin: everything · Manager: all but Users · Cashier: POS and own sales"
           }
         >
-          <select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)} className={inputCls} disabled={isSelf}>
+          <select
+            name="role"
+            value={role}
+            onChange={(e) => setRole(e.target.value as Role)}
+            className={inputCls}
+            disabled={isSelf}
+            title={isSelf ? "You can't change your own role" : undefined}
+          >
             {ROLES.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}

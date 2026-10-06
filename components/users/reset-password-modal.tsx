@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { btnPrimary, btnSecondary, inputCls, Modal } from "@/components/ui/modal";
-import { Field, PASSWORD_HINT, passwordProblem, type FieldErrors } from "./field";
+import { bannerFor, Field, FIX_FIELDS, PASSWORD_HINT, passwordProblem, type FieldErrors } from "./field";
 import type { UserRow } from "./types";
 
 export function ResetPasswordModal({ user, isSelf, onClose }: { user: UserRow; isSelf?: boolean; onClose: () => void }) {
@@ -19,9 +19,15 @@ export function ResetPasswordModal({ user, isSelf, onClose }: { user: UserRow; i
     e.preventDefault();
     setError(null);
     setFieldErrors({});
+    const clientErrors: FieldErrors = {};
     const problem = passwordProblem(password);
-    if (problem) return setFieldErrors({ password: [problem] });
-    if (password !== confirm) return setFieldErrors({ confirm: ["Passwords don't match"] });
+    if (problem) clientErrors.password = [problem];
+    if (!confirm) clientErrors.confirm = ["Please confirm the new password"];
+    else if (confirm !== password) clientErrors.confirm = ["Passwords don't match"];
+    if (Object.keys(clientErrors).length) {
+      setError(FIX_FIELDS);
+      return setFieldErrors(clientErrors);
+    }
     setSaving(true);
     const res = await fetch(`/api/users/${user.id}/password`, {
       method: "POST",
@@ -34,7 +40,7 @@ export function ResetPasswordModal({ user, isSelf, onClose }: { user: UserRow; i
       setDone(true);
       router.refresh();
     } else {
-      setError(data.error ?? "Could not reset the password");
+      setError(bannerFor(res.status, data, "Could not reset the password"));
       setFieldErrors(data.fieldErrors ?? {});
     }
   }
