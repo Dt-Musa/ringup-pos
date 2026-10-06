@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/safe-redirect";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -27,8 +28,7 @@ export default function LoginForm() {
       return;
     }
     if (res.ok) {
-      const next = params.get("next");
-      router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
+      router.replace(safeNext(params.get("next")));
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
