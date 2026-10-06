@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { safeNext } from "@/lib/safe-redirect";
+import { inputCls, btnPrimary } from "@/components/ui/modal";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -38,33 +39,29 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 space-y-4">
-      <label className="block text-sm font-medium">
+    <form onSubmit={onSubmit} className="login-form mt-6 space-y-5">
+      <label className="block text-sm font-semibold text-slate-800">
         Email
         <input
           name="email"
           type="email"
           required
           autoComplete="username"
-          className="mt-1 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
+          className={`${inputCls} login-input !border-slate-400 !bg-white !text-slate-950 [color-scheme:light]`}
         />
       </label>
-      <label className="block text-sm font-medium">
+      <label className="block text-sm font-semibold text-slate-800">
         Password
         <input
           name="password"
           type="password"
           required
           autoComplete="current-password"
-          className="mt-1 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
+          className={`${inputCls} login-input !border-slate-400 !bg-white !text-slate-950 [color-scheme:light]`}
         />
       </label>
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-md bg-emerald-600 px-3 py-2 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
-      >
+      {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium leading-5 text-red-800">{error}</p>}
+      <button type="submit" disabled={pending} className={`${btnPrimary} min-h-12 w-full text-base`}>
         {pending ? "Signing in…" : "Sign in"}
       </button>
     </form>

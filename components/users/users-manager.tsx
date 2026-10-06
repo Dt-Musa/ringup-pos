@@ -12,7 +12,7 @@ import type { UserRow } from "./types";
 
 type ModalState = null | { kind: "form"; user?: UserRow } | { kind: "password"; user: UserRow } | { kind: "toggle"; user: UserRow };
 
-const actionCls = "text-emerald-700 hover:underline";
+const actionCls = "inline-flex min-h-10 items-center rounded-md px-1 text-sm font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950 hover:decoration-emerald-700";
 
 export function UsersManager({ users, currentUserId }: { users: UserRow[]; currentUserId: string }) {
   const router = useRouter();
@@ -50,7 +50,7 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg bg-white shadow-sm dark:bg-zinc-900">
+      <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
         <table className="w-full text-left text-sm" data-testid="users-table">
           <thead className="bg-zinc-100 text-xs uppercase text-zinc-500 dark:bg-zinc-800">
             <tr>
@@ -74,9 +74,9 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
             {users.map((u) => {
               const isSelf = u.id === currentUserId;
               return (
-                <tr key={u.id} className={`border-t border-zinc-100 dark:border-zinc-800 ${u.active ? "" : "opacity-60"}`}>
+                <tr key={u.id} className={`border-t border-zinc-100 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/40 ${u.active ? "" : "opacity-60"}`}>
                   {/* w-full + max-w-0: this column absorbs the spare width and truncates instead of widening the table */}
-                  <td className="w-full max-w-0 px-3 py-2">
+                  <td data-label="User" className="w-full max-w-0 px-3 py-2">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-500 dark:bg-zinc-800">
                         {u.name.slice(0, 1).toUpperCase()}
@@ -95,22 +95,22 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
                       </div>
                     </div>
                   </td>
-                  <td className="hidden px-3 py-2 xl:table-cell">
+                  <td data-label="Email" className="hidden px-3 py-2 xl:table-cell">
                     <div className="max-w-64 truncate" title={u.email}>
                       {u.email}
                     </div>
                   </td>
-                  <td className="px-3 py-2">
+                  <td data-label="Role" className="px-3 py-2">
                     <RoleBadge role={u.role} />
                   </td>
-                  <td className="px-3 py-2">
+                  <td data-label="Status" className="px-3 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${u.active ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"}`}>
                       {u.active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="hidden whitespace-nowrap px-3 py-2 text-zinc-600 xl:table-cell dark:text-zinc-400">{formatDate(u.createdAt)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-zinc-600 dark:text-zinc-400">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Never"}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-right">
+                  <td data-label="Created" className="hidden whitespace-nowrap px-3 py-2 text-zinc-600 xl:table-cell dark:text-zinc-400">{formatDate(u.createdAt)}</td>
+                  <td data-label="Last login" className="whitespace-nowrap px-3 py-2 text-zinc-600 dark:text-zinc-400">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Never"}</td>
+                  <td data-label="Actions" className="whitespace-nowrap px-3 py-2 text-right">
                     <div className="inline-flex items-center gap-3">
                       <button onClick={() => setModal({ kind: "form", user: u })} className={actionCls} aria-label={`Edit ${u.name}`}>
                         Edit
@@ -128,7 +128,7 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
                         disabled={isSelf}
                         title={isSelf ? "You can't deactivate your own account" : undefined}
                         aria-label={`${u.active ? "Deactivate" : "Reactivate"} ${u.name}`}
-                        className={`${u.active ? "text-red-600" : "text-emerald-700"} hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40`}
+                        className={`${u.active ? "text-red-700" : "text-emerald-800"} inline-flex min-h-10 items-center rounded-md px-1 text-sm font-semibold underline decoration-current/30 underline-offset-2 hover:decoration-current disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40`}
                       >
                         {u.active ? "Deactivate" : "Reactivate"}
                       </button>

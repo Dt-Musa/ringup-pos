@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f8f7;
+  --foreground: #17211d;
+  --muted: #475569;
+  --border: #cbd5e1;
+  --brand: #059669;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -12,17 +16,372 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #a7f3d0;
+  color: #064e3b;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+}
+
+/* Keep supporting copy readable against the soft surfaces used throughout
+   the app. These classes are used widely by existing screens. */
+.text-zinc-500 {
+  color: #52606d !important;
+}
+
+.text-zinc-400 {
+  color: #64748b !important;
+}
+
+.text-zinc-600 {
+  color: #334155 !important;
+}
+
+.text-zinc-700 {
+  color: #1e293b !important;
+}
+
+.text-zinc-800 {
+  color: #17211d !important;
+}
+
+.bg-zinc-50 {
+  background-color: #f8fafc !important;
+}
+
+.bg-zinc-100 {
+  background-color: #f1f5f9 !important;
+}
+
+.bg-zinc-200 {
+  background-color: #e2e8f0 !important;
+}
+
+.border-zinc-200,
+.border-zinc-300 {
+  border-color: #cbd5e1 !important;
+}
+
+.border-zinc-100 {
+  border-color: #e2e8f0 !important;
+}
+
+.divide-zinc-100 > :not(:last-child) {
+  border-color: #e2e8f0 !important;
+}
+
+.bg-emerald-600 {
+  background-color: #047857 !important;
+}
+
+.hover\:bg-emerald-700:hover {
+  background-color: #065f46 !important;
+}
+
+.text-emerald-700 {
+  color: #047857 !important;
+}
+
+.text-emerald-800 {
+  color: #065f46 !important;
+}
+
+.text-amber-700 {
+  color: #92400e !important;
+}
+
+.text-red-600 {
+  color: #b91c1c !important;
+}
+
+.text-red-700 {
+  color: #991b1b !important;
+}
+
+.text-sky-700 {
+  color: #0369a1 !important;
+}
+
+.text-violet-700 {
+  color: #6d28d9 !important;
+}
+
+.text-blue-700 {
+  color: #1d4ed8 !important;
+}
+
+.text-teal-700 {
+  color: #0f766e !important;
+}
+
+.text-purple-700 {
+  color: #7e22ce !important;
+}
+
+.text-zinc-500,
+.text-slate-500 {
+  font-weight: 450;
+}
+
+.border-emerald-600 {
+  border-color: #047857 !important;
+}
+
+input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  caret-color: #0f172a;
+}
+
+.login-input::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+/* The product is intentionally presented with a light content theme. Some
+   existing components still carry system dark-mode utility classes; neutralise
+   those variants so a dark OS preference cannot create dark surfaces with
+   dark text while the rest of the page remains light. */
+.dark\:bg-zinc-900,
+.dark\:bg-zinc-800,
+.dark\:bg-zinc-800\/50 {
+  background-color: #ffffff !important;
+  color: #17211d !important;
+}
+
+main.dark\:bg-zinc-950 {
+  background-color: #f8fafc !important;
+  color: #17211d !important;
+}
+
+.dark\:bg-zinc-100,
+.dark\:bg-zinc-200 {
+  background-color: #f1f5f9 !important;
+  color: #17211d !important;
+}
+
+.dark\:text-zinc-100,
+.dark\:text-zinc-200,
+.dark\:text-zinc-300,
+.dark\:text-zinc-400 {
+  color: #334155 !important;
+}
+
+.dark\:border-zinc-700,
+.dark\:border-zinc-800 {
+  border-color: #cbd5e1 !important;
+}
+
+.dark\:hover\:bg-zinc-800:hover,
+.dark\:hover\:bg-zinc-800\/40:hover {
+  background-color: #f1f5f9 !important;
+}
+
+button,
+a {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 0.875rem;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Dense data tables become readable cards on phones instead of forcing a
+     wide desktop table into a tiny viewport. */
+  [data-testid="users-table"],
+  [data-testid="products-table"],
+  [data-testid="inventory-table"],
+  [data-testid="sales-table"],
+  [data-testid="history-table"] {
+    display: block;
+  }
+
+  [data-testid="users-table"] thead,
+  [data-testid="products-table"] thead,
+  [data-testid="inventory-table"] thead,
+  [data-testid="sales-table"] thead,
+  [data-testid="history-table"] thead {
+    display: none;
+  }
+
+  [data-testid="users-table"] tbody,
+  [data-testid="products-table"] tbody,
+  [data-testid="inventory-table"] tbody,
+  [data-testid="sales-table"] tbody,
+  [data-testid="history-table"] tbody,
+  [data-testid="users-table"] tr,
+  [data-testid="products-table"] tr,
+  [data-testid="inventory-table"] tr,
+  [data-testid="sales-table"] tr,
+  [data-testid="history-table"] tr {
+    display: block;
+  }
+
+  [data-testid="users-table"] tr,
+  [data-testid="products-table"] tr,
+  [data-testid="inventory-table"] tr,
+  [data-testid="sales-table"] tr,
+  [data-testid="history-table"] tr {
+    margin: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: white;
+  }
+
+  [data-testid="users-table"] td,
+  [data-testid="products-table"] td,
+  [data-testid="inventory-table"] td,
+  [data-testid="sales-table"] td,
+  [data-testid="history-table"] td {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-top: 1px solid #eef2ef;
+    padding: 0.65rem 0.8rem;
+    text-align: right;
+    white-space: normal;
+  }
+
+  [data-testid="users-table"] td:first-child,
+  [data-testid="products-table"] td:first-child,
+  [data-testid="inventory-table"] td:first-child,
+  [data-testid="sales-table"] td:first-child,
+  [data-testid="history-table"] td:first-child {
+    border-top: 0;
+  }
+
+  [data-testid="users-table"] td::before,
+  [data-testid="products-table"] td::before,
+  [data-testid="inventory-table"] td::before,
+  [data-testid="sales-table"] td::before,
+  [data-testid="history-table"] td::before {
+    flex: 0 0 auto;
+    color: #64716b;
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  [data-testid="users-table"] td:first-child,
+  [data-testid="products-table"] td:first-child,
+  [data-testid="inventory-table"] td:first-child,
+  [data-testid="sales-table"] td:first-child,
+  [data-testid="history-table"] td:first-child,
+  [data-testid="users-table"] td:last-child,
+  [data-testid="products-table"] td:last-child,
+  [data-testid="inventory-table"] td:last-child,
+  [data-testid="sales-table"] td:last-child,
+  [data-testid="history-table"] td:last-child {
+    display: block;
+    text-align: left;
+  }
+
+  [data-testid="users-table"] td:first-child::before,
+  [data-testid="products-table"] td:first-child::before,
+  [data-testid="inventory-table"] td:first-child::before,
+  [data-testid="sales-table"] td:first-child::before,
+  [data-testid="history-table"] td:first-child::before,
+  [data-testid="users-table"] td:last-child::before,
+  [data-testid="products-table"] td:last-child::before,
+  [data-testid="inventory-table"] td:last-child::before,
+  [data-testid="sales-table"] td:last-child::before,
+  [data-testid="history-table"] td:last-child::before {
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  [data-testid="users-table"] td[colspan],
+  [data-testid="products-table"] td[colspan],
+  [data-testid="inventory-table"] td[colspan],
+  [data-testid="sales-table"] td[colspan],
+  [data-testid="history-table"] td[colspan] {
+    display: block;
+    text-align: center;
+  }
+
+  [data-testid="users-table"] td[colspan]::before,
+  [data-testid="products-table"] td[colspan]::before,
+  [data-testid="inventory-table"] td[colspan]::before,
+  [data-testid="sales-table"] td[colspan]::before,
+  [data-testid="history-table"] td[colspan]::before {
+    display: none;
+  }
+
+  /* The email is already shown beneath the user's name on phones. */
+  [data-testid="users-table"] td.hidden {
+    display: none !important;
+  }
+
+  [data-testid="users-table"] td.hidden::before,
+  [data-testid="products-table"] td.hidden::before,
+  [data-testid="inventory-table"] td.hidden::before,
+  [data-testid="sales-table"] td.hidden::before,
+  [data-testid="history-table"] td.hidden::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  [data-testid="users-table"] td:last-child > div,
+  [data-testid="products-table"] td:last-child > div,
+  [data-testid="inventory-table"] td:last-child > div,
+  [data-testid="sales-table"] td:last-child > a,
+  [data-testid="history-table"] td:last-child > a {
+    flex-wrap: wrap;
+  }
+
+  [data-testid="users-table"] td:last-child button,
+  [data-testid="products-table"] td:last-child button,
+  [data-testid="inventory-table"] td:last-child button,
+  [data-testid="inventory-table"] td:last-child a,
+  [data-testid="sales-table"] td:last-child a,
+  [data-testid="history-table"] td:last-child a {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+  }
 }
 
 /* ---- Printing: only the element marked .print-area (the receipt) is printed, on one 80mm-wide page.

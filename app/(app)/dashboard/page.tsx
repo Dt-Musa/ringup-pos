@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 
 function Card({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
   return (
-    <div className="rounded-lg bg-white p-5 shadow-sm dark:bg-zinc-900">
-      <div className="text-sm text-zinc-500">{label}</div>
-      <div className={`mt-2 text-2xl font-semibold ${tone ?? ""}`}>{value}</div>
+    <div className="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm shadow-zinc-200/40 transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</div>
+      <div className={`mt-2 text-2xl font-bold tracking-tight ${tone ?? ""}`}>{value}</div>
       {sub && <div className="mt-1 text-xs text-zinc-500">{sub}</div>}
     </div>
   );
@@ -22,7 +22,7 @@ function Card({ label, value, sub, tone }: { label: string; value: string; sub?:
 
 function Panel({ title, subtitle, children, action }: { title: string; subtitle?: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="rounded-lg bg-white p-5 shadow-sm dark:bg-zinc-900">
+    <section className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm shadow-zinc-200/30 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-4 flex items-start justify-between gap-2">
         <div>
           <h2 className="font-semibold">{title}</h2>

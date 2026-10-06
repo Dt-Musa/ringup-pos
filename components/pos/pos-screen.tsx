@@ -157,7 +157,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const inCart = (id: string) => cart.find((c) => c.productId === id)?.qty ?? 0;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-6">
       {/* ---------- catalogue ---------- */}
       <section>
         <input
@@ -170,7 +170,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
           onKeyDown={onSearchKey}
           placeholder="Search by name or scan / type SKU, then Enter…"
           aria-label="Search products"
-          className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/30 dark:border-zinc-700 dark:bg-zinc-900"
+          className="w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
         />
         <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Categories">
           {[{ id: "", name: "All" }, ...categories].map((c) => (
@@ -179,7 +179,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
               role="tab"
               aria-selected={categoryId === c.id}
               onClick={() => setCategoryId(c.id)}
-              className={`rounded-full px-3 py-1.5 text-sm ${
+              className={`min-h-10 rounded-full px-3 py-1.5 text-sm ${
                 categoryId === c.id ? "bg-emerald-600 text-white" : "bg-white text-zinc-700 shadow-sm hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-200"
               }`}
             >
@@ -193,7 +193,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             No products match &ldquo;{query}&rdquo;.
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4" data-testid="product-grid">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 xl:grid-cols-4" data-testid="product-grid">
             {filtered.map((p) => {
               const out = p.stockQty <= 0;
               const low = !out && p.stockQty <= p.minStock;
@@ -205,7 +205,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   disabled={out}
                   onClick={() => add(p)}
                   data-sku={p.sku}
-                  className={`relative flex flex-col rounded-lg bg-white p-3 text-left shadow-sm transition dark:bg-zinc-900 ${
+                  className={`relative flex min-h-10 flex-col rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
                     out ? "cursor-not-allowed opacity-50" : "hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
@@ -239,8 +239,8 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
 
       {/* ---------- cart ---------- */}
       <aside className="lg:sticky lg:top-8 lg:self-start">
-        <div className="rounded-xl bg-white shadow-sm dark:bg-zinc-900">
-          <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3 dark:border-zinc-800">
+        <div className="rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3 sm:px-5 dark:border-zinc-800">
             <h2 className="font-semibold">Current sale</h2>
             {cart.length > 0 && (
               <button onClick={() => window.confirm("Clear the whole cart?") && resetSale()} className="text-sm text-red-600 hover:underline">
@@ -249,7 +249,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             )}
           </div>
 
-          <div className="max-h-[320px] overflow-y-auto" data-testid="cart">
+          <div className="max-h-[35vh] overflow-y-auto sm:max-h-[320px]" data-testid="cart">
             {lines.length === 0 ? (
               <p className="px-5 py-10 text-center text-sm text-zinc-500">Cart is empty. Tap a product to add it.</p>
             ) : (
@@ -298,7 +298,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             )}
           </div>
 
-          <div className="space-y-4 border-t border-zinc-100 px-5 py-4 dark:border-zinc-800">
+          <div className="space-y-4 border-t border-zinc-100 px-4 py-4 sm:px-5 dark:border-zinc-800">
             {/* discount */}
             <div>
               <div className="flex items-center justify-between text-sm">

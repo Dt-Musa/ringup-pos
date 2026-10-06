@@ -58,7 +58,7 @@ export function InventoryFilters({ categories }: { categories: { id: string; nam
   const hasFilters = !!(urlQ || categoryId || status !== "all");
 
   return (
-    <form ref={formRef} method="get" action={pathname} onSubmit={submitForm} className="mb-4 flex flex-wrap items-center gap-3" data-testid="inventory-filters">
+    <form ref={formRef} method="get" action={pathname} onSubmit={submitForm} className="mb-4 grid gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3" data-testid="inventory-filters">
       <input
         type="search"
         name="q"
@@ -70,7 +70,7 @@ export function InventoryFilters({ categories }: { categories: { id: string; nam
         }}
         placeholder="Search name or SKU…"
         aria-label="Search inventory"
-        className={`${inputCls.replace("w-full", "")} mt-0 min-w-[14rem] max-w-xs flex-1`}
+        className={`${inputCls.replace("w-full", "")} mt-0 min-w-0 max-w-none flex-1 sm:min-w-[14rem] sm:max-w-xs`}
       />
       <select
         name="categoryId"
@@ -92,20 +92,20 @@ export function InventoryFilters({ categories }: { categories: { id: string; nam
         ))}
       </select>
       <input type="hidden" name="status" value={status === "all" ? "" : status} />
-      <div className="inline-flex overflow-hidden rounded-md border border-zinc-300 text-sm dark:border-zinc-700" role="group" aria-label="Stock status">
+      <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-zinc-300 text-sm dark:border-zinc-700 sm:inline-flex" role="group" aria-label="Stock status">
         {STATUSES.map(([v, label]) => (
           <Link
             key={v}
             href={hrefFor({ status: v === "all" ? "" : v })}
             replace
             aria-current={status === v ? "true" : undefined}
-            className={`px-3 py-2 ${status === v ? "bg-emerald-600 text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
+            className={`min-h-10 px-3 py-2 text-center ${status === v ? "bg-emerald-600 text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
           >
             {label}
           </Link>
         ))}
       </div>
-      <button type="submit" className="rounded-md border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800">
+      <button type="submit" className="min-h-10 rounded-lg border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800">
         Apply
       </button>
       {hasFilters && (

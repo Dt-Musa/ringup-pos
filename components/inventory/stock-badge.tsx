@@ -1,9 +1,9 @@
 import type { StockStatus } from "@/lib/inventory";
 
 const STYLES: Record<StockStatus, string> = {
-  IN_STOCK: "bg-emerald-100 text-emerald-700",
-  LOW: "bg-amber-100 text-amber-700",
-  OUT: "bg-red-100 text-red-700",
+  IN_STOCK: "border border-emerald-200 bg-emerald-100 text-emerald-800",
+  LOW: "border border-amber-200 bg-amber-100 text-amber-800",
+  OUT: "border border-red-200 bg-red-100 text-red-800",
 };
 const LABELS: Record<StockStatus, string> = { IN_STOCK: "In stock", LOW: "Low", OUT: "Out" };
 

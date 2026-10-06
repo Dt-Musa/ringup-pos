@@ -71,11 +71,11 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           </select>
         )}
         <div className="flex gap-2 sm:col-span-2 lg:col-span-6">
-          <button type="submit" className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+          <button type="submit" className="min-h-10 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
             Apply filters
           </button>
           {hasFilters && (
-            <Link href="/sales" className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800">
+            <Link href="/sales" className="inline-flex min-h-10 items-center rounded-lg border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800">
               Clear
             </Link>
           )}
@@ -117,25 +117,25 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             )}
             {data.sales.map((s) => (
               <tr key={s.id} className="border-t border-zinc-100 dark:border-zinc-800">
-                <td className="px-4 py-2 font-mono text-xs font-semibold">
-                  <Link href={`/sales/${s.id}`} className="text-emerald-700 hover:underline">
+                <td data-label="Receipt" className="px-4 py-2 font-mono text-xs font-semibold">
+                  <Link href={`/sales/${s.id}`} className="font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
                     {s.receiptNo}
                   </Link>
                 </td>
-                <td className="whitespace-nowrap px-4 py-2">{formatDateTime(s.createdAt)}</td>
-                <td className="px-4 py-2">{s.cashier.name}</td>
-                <td className="px-4 py-2 text-right">{s._count.items}</td>
-                <td className="px-4 py-2">{PAYMENT_LABELS[s.paymentMethod]}</td>
-                <td className="px-4 py-2 text-right font-medium">{formatUGX(s.total)}</td>
-                <td className={`px-4 py-2 text-right ${s.refundedAmount ? "text-red-600" : "text-zinc-400"}`}>{s.refundedAmount ? `-${formatUGX(s.refundedAmount)}` : "—"}</td>
-                <td className="px-4 py-2">
+                <td data-label="Date" className="whitespace-nowrap px-4 py-2">{formatDateTime(s.createdAt)}</td>
+                <td data-label="Cashier" className="px-4 py-2">{s.cashier.name}</td>
+                <td data-label="Items" className="px-4 py-2 text-right">{s._count.items}</td>
+                <td data-label="Payment" className="px-4 py-2">{PAYMENT_LABELS[s.paymentMethod]}</td>
+                <td data-label="Total" className="px-4 py-2 text-right font-medium">{formatUGX(s.total)}</td>
+                <td data-label="Refunded" className={`px-4 py-2 text-right ${s.refundedAmount ? "text-red-600" : "text-zinc-400"}`}>{s.refundedAmount ? `-${formatUGX(s.refundedAmount)}` : "—"}</td>
+                <td data-label="Status" className="px-4 py-2">
                   <SaleStatusBadge status={s.status} />
                 </td>
-                <td className="whitespace-nowrap px-4 py-2 text-right">
-                  <Link href={`/sales/${s.id}`} className="mr-3 text-emerald-700 hover:underline">
+                <td data-label="Actions" className="whitespace-nowrap px-4 py-2 text-right">
+                  <Link href={`/sales/${s.id}`} className="mr-3 inline-flex min-h-10 items-center font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
                     Details
                   </Link>
-                  <Link href={`/sales/${s.id}/receipt`} className="text-emerald-700 hover:underline">
+                  <Link href={`/sales/${s.id}/receipt`} className="inline-flex min-h-10 items-center font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
                     Receipt
                   </Link>
                 </td>

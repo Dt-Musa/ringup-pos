@@ -22,7 +22,7 @@ export function ReportFilters({ tab, preset, from, to, grain, showGrain, presets
   const field = (name: string) => formRef.current?.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null;
 
   return (
-    <form ref={formRef} method="get" action="/reports" className="mb-6 flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow-sm dark:bg-zinc-900" aria-label="Report filters">
+    <form ref={formRef} method="get" action="/reports" className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900" aria-label="Report filters">
       <input type="hidden" name="tab" value={tab} />
       <label className="text-sm">
         <span className="text-zinc-600 dark:text-zinc-400">Date range</span>

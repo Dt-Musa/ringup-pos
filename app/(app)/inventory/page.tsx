@@ -43,9 +43,9 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
       <StockAlertBanner items={alerts} total={summary.lowStock + summary.outOfStock} linkToInventory={filters.status === "all"} />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map((c) => (
-          <div key={c.id} data-testid={`card-${c.id}`} className="rounded-lg bg-white p-4 shadow-sm dark:bg-zinc-900">
-            <div className="text-xs text-zinc-500">{c.label}</div>
-            <div className={`mt-1 text-xl font-semibold ${c.tone ?? ""}`}>{c.value}</div>
+          <div key={c.id} data-testid={`card-${c.id}`} className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{c.label}</div>
+            <div className={`mt-1.5 text-xl font-bold tracking-tight ${c.tone ?? ""}`}>{c.value}</div>
           </div>
         ))}
       </div>

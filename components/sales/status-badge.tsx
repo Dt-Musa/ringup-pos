@@ -1,8 +1,8 @@
 const STYLES: Record<string, string> = {
-  COMPLETED: "bg-emerald-100 text-emerald-700",
-  PARTIALLY_REFUNDED: "bg-amber-100 text-amber-700",
-  REFUNDED: "bg-red-100 text-red-700",
-  VOIDED: "bg-zinc-200 text-zinc-600",
+  COMPLETED: "border border-emerald-200 bg-emerald-100 text-emerald-800",
+  PARTIALLY_REFUNDED: "border border-amber-200 bg-amber-100 text-amber-800",
+  REFUNDED: "border border-red-200 bg-red-100 text-red-800",
+  VOIDED: "border border-zinc-300 bg-zinc-200 text-zinc-800",
 };
 const LABELS: Record<string, string> = { COMPLETED: "Completed", PARTIALLY_REFUNDED: "Partially refunded", REFUNDED: "Refunded", VOIDED: "Voided" };
 

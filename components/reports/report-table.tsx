@@ -18,12 +18,12 @@ export function ReportSummary({ report }: { report: ReportData }) {
 export function ReportTable({ report }: { report: ReportData }) {
   const { columns, rows, totals } = report;
   return (
-    <div className="overflow-x-auto rounded-lg bg-white shadow-sm dark:bg-zinc-900">
+    <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
       <table className="w-full text-sm" data-testid="report-table">
         <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-800/50">
           <tr>
             {columns.map((c) => (
-              <th key={c.key} scope="col" className={`whitespace-nowrap px-3 py-2 font-medium ${isNumeric(c.format) ? "text-right" : ""}`}>
+              <th key={c.key} scope="col" className={`whitespace-nowrap px-3 py-3 font-semibold ${isNumeric(c.format) ? "text-right" : ""}`}>
                 {c.label}
               </th>
             ))}
@@ -40,7 +40,7 @@ export function ReportTable({ report }: { report: ReportData }) {
           {rows.map((r, i) => (
             <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
               {columns.map((c) => (
-                <td key={c.key} className={`whitespace-nowrap px-3 py-2 ${isNumeric(c.format) ? "text-right tabular-nums" : ""}`}>
+                <td key={c.key} className={`whitespace-nowrap px-3 py-3 ${isNumeric(c.format) ? "text-right tabular-nums" : ""}`}>
                   {formatCell(r[c.key], c.format)}
                 </td>
               ))}

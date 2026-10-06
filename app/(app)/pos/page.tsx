@@ -1,4 +1,5 @@
 import { PosScreen } from "@/components/pos/pos-screen";
+import { PageHeader } from "@/components/page-header";
 import { guardPage } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -14,7 +15,7 @@ export default async function PosPage() {
   ]);
   return (
     <>
-      <h1 className="mb-4 text-2xl font-semibold">Point of Sale</h1>
+      <PageHeader title="Point of Sale" description="Build a basket, take payment and issue receipts." />
       <PosScreen products={products} categories={categories} />
     </>
   );

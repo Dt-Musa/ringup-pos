@@ -73,7 +73,7 @@ export default async function StockHistoryPage({ searchParams }: { searchParams:
         </div>
       </form>
 
-      <div className="overflow-x-auto rounded-lg bg-white shadow-sm dark:bg-zinc-900">
+      <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
         <table className="w-full text-left text-sm" data-testid="history-table">
           <thead className="bg-zinc-100 text-xs uppercase text-zinc-500 dark:bg-zinc-800">
             <tr>
@@ -95,23 +95,23 @@ export default async function StockHistoryPage({ searchParams }: { searchParams:
               </tr>
             )}
             {data.movements.map((m) => (
-              <tr key={m.id} className="border-t border-zinc-100 dark:border-zinc-800">
-                <td className="whitespace-nowrap px-4 py-2">{formatDateTime(m.createdAt)}</td>
-                <td className="px-4 py-2">
+              <tr key={m.id} className="border-t border-zinc-100 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/40">
+                <td data-label="Date" className="whitespace-nowrap px-4 py-2">{formatDateTime(m.createdAt)}</td>
+                <td data-label="Product" className="px-4 py-2">
                   <div className="font-medium">{m.product.name}</div>
                   <div className="font-mono text-xs text-zinc-500">{m.product.sku}</div>
                 </td>
-                <td className="px-4 py-2">
+                <td data-label="Type" className="px-4 py-2">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TYPE_STYLES[m.type]}`}>{m.type[0] + m.type.slice(1).toLowerCase()}</span>
                 </td>
-                <td className={`px-4 py-2 text-right font-semibold ${m.qty < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                <td data-label="Change" className={`px-4 py-2 text-right font-semibold ${m.qty < 0 ? "text-red-600" : "text-emerald-700"}`}>
                   {m.qty > 0 ? "+" : ""}
                   {m.qty}
                 </td>
-                <td className="whitespace-nowrap px-4 py-2 text-right text-zinc-600">
+                <td data-label="Before → After" className="whitespace-nowrap px-4 py-2 text-right text-zinc-600">
                   {m.qtyBefore ?? "—"} → {m.qtyAfter ?? "—"}
                 </td>
-                <td className="px-4 py-2">
+                <td data-label="Reason" className="px-4 py-2">
                   {m.sale ? (
                     <Link href={`/sales/${m.sale.id}/receipt`} className="text-emerald-700 hover:underline">
                       Sale {m.sale.receiptNo}
@@ -120,7 +120,7 @@ export default async function StockHistoryPage({ searchParams }: { searchParams:
                     (m.reason ?? "—")
                   )}
                 </td>
-                <td className="px-4 py-2">{m.user.name}</td>
+                <td data-label="User" className="px-4 py-2">{m.user.name}</td>
               </tr>
             ))}
           </tbody>
