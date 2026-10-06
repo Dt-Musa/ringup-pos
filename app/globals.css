@@ -175,6 +175,7 @@ input::placeholder {
    those variants so a dark OS preference cannot create dark surfaces with
    dark text while the rest of the page remains light. */
 .dark\:bg-zinc-900,
+.dark\:bg-zinc-950,
 .dark\:bg-zinc-800,
 .dark\:bg-zinc-800\/50 {
   background-color: #ffffff !important;
@@ -183,6 +184,11 @@ input::placeholder {
 
 main.dark\:bg-zinc-950 {
   background-color: #f8fafc !important;
+  color: #17211d !important;
+}
+
+.dark\:text-white,
+.dark\:text-zinc-950 {
   color: #17211d !important;
 }
 
