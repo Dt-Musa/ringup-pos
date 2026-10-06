@@ -1,6 +1,6 @@
 # RingUp
 
-RingUp is a web-based Point of Sale for a small shop (DVN Programming Challenge). **Phase 1 – foundation:** database schema, authentication, role-based access control, app shell with placeholder pages.
+RingUp is a web-based Point of Sale for a small shop (DVN Programming Challenge). Products & categories, POS checkout with receipts, inventory with stock history, sales & refunds, and a dashboard with charts plus exportable (CSV/PDF) reports – with role-based access for Admin, Manager and Cashier.
 
 **Stack:** Next.js 16 (App Router, TypeScript, Tailwind v4) · PostgreSQL · Prisma 6 · iron-session (encrypted cookie sessions) · bcryptjs password hashing · Zod. Currency: **UGX** (stored as whole integers).
 
@@ -54,7 +54,7 @@ All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`*
 
 ### Scripts
 
-`dev`, `build`, `start`, `lint`, `db:migrate` (dev migration), `db:deploy` (apply migrations), `db:seed`, `db:reset` (drop + migrate + seed), `db:studio`.
+`dev`, `build`, `start`, `lint`, `db:migrate` (dev migration), `db:deploy` (apply migrations), `db:seed`, `db:reset` (drop + migrate + seed), `db:studio`, `db:demo` (optional demo sales, see below).
 
 ## Access control
 
@@ -100,6 +100,18 @@ API: `GET /api/inventory` (overview + summary), `GET/POST /api/inventory/movemen
 
 **Netting refunds out of reports** – use `lib/finance.ts` (`getFinancials`): `revenue = Σ Sale.total − Σ Sale.refundedAmount` (voided excluded), `COGS = Σ unitCost×qty − Σ unitCost×returned qty that was restocked`, `profit = revenue − COGS`. The dashboard and `GET /api/reports/summary` already use it.
 
+### Phase 5 – dashboard and reports
+
+**Dashboard** (all roles): net sales today / this week (Mon–Sun) / this month, transactions today, active products, low/out-of-stock count, and – Admin/Manager only – gross profit this month with margin and COGS. Charts (recharts): daily net sales for the last 30 days, net sales by payment method (donut), top 5 products by net units (bar), plus a low-stock list. **Cashiers see only their own sales** and never any cost/profit figures (those aren't even queried for their page).
+
+**`/reports`** (Admin/Manager; cashiers are redirected, the API returns 403): date range presets *Today, This week, This month, Last 30 days, Custom* (max 1,100 days), and eight reports – **Sales** (list + totals; screen shows the latest 200, exports include all), **Profit** (sales before discounts, discounts, refunds, net revenue, COGS, gross profit, margin; by category), **Inventory** (current stock, value at cost and retail), **Best sellers**, **Low stock** (with units sold in the period and a suggested reorder), **By cashier**, **By payment method**, **Summary** grouped by day / week / month.
+
+**Exports** – every report: `GET /api/reports/export?report=<sales|profit|inventory|best-sellers|low-stock|cashiers|payments|summary>&format=<csv|pdf>&preset=<today|week|month|last30|custom>&from=YYYY-MM-DD&to=YYYY-MM-DD&grain=<day|week|month>`. Role-checked (proxy + handler) and Zod-validated (400 with `fieldErrors`). CSV: UTF-8 with BOM, plain integer UGX columns, local times, formula-injection guard, summary + notes below the table. PDF: real A4-landscape file generated server-side with **pdfkit** (summary boxes, paginated table with repeated header, totals, notes, page numbers). The page, CSV and PDF are rendered from the same report object, so they always agree.
+
+**How the numbers are computed** – all money goes through `lib/finance.ts` (single SQL CTE per query: sales in scope → per-sale COGS net of restocked returns → grouped). Net sales = Σ `Sale.total` − Σ `Sale.refundedAmount`; refunds count against the **original sale's date**; voided sales excluded; days/weeks/months are bucketed in **Africa/Kampala** time in SQL, and empty days are filled with zeros (`generate_series`), so everything is correct with no sales. Per-product/category revenue spreads the sale discount over its lines (may differ from totals by a few UGX of rounding).
+
+**Demo sales (optional)** – `npm run db:demo` creates ~30 days of realistic sales (weekday/weekend pattern, mixed payment methods, discounts, ~4% refunds incl. damaged returns, supplier restocks) through the **real** `createSale` / `createRefund` / stock-action code, executed in chronological order and back-dated, so stock levels, stock movements (before/after) and receipt numbers stay consistent. Options: `-- --days 14`, `-- --seed 7` (deterministic), `-- --force` (allow when sales already exist; otherwise it refuses). Undo with `npm run db:reset`.
+
 Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/users` (admin), `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
 
 ## Schema (`prisma/schema.prisma`)
@@ -123,7 +135,9 @@ Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`,
 app/login            login page          app/(app)/*   authenticated shell + pages
 app/api/*            route handlers      proxy.ts      first-line auth/role checks
 lib/permissions.ts   role/route tables   lib/auth.ts   server-side guards
-lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
+lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed, demo-sales
+lib/finance.ts       net-of-refunds sums lib/reports.ts report builders (page/CSV/PDF)
+lib/report-export.ts CSV + pdfkit PDF    components/charts  recharts wrappers
 ```
 
 ## Roadmap
@@ -133,4 +147,5 @@ lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed
 - **Phase 3 (done):** POS checkout, receipts, sales list.
 - **Phase 4a (done):** inventory overview, stock actions, stock history, low-stock alerts.
 - **Phase 4b (done):** sales filters/totals, sale detail, refunds with restock.
-- **Phase 5:** dashboard, reports, user management.
+- **Phase 5 (done):** dashboard charts, reports with CSV/PDF export, demo-sales script.
+- **Next:** user management UI.

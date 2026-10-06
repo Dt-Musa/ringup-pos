@@ -3,7 +3,7 @@ import { apiAuth } from "@/lib/auth";
 import { dayRangeEAT } from "@/lib/dates";
 import { getFinancials } from "@/lib/finance";
 
-// ADMIN / MANAGER only. Placeholder aggregate (net of refunds); full reports arrive in a later phase.
+// ADMIN / MANAGER only. Net-of-refunds totals for an optional from/to range (see /api/reports/export for full reports).
 export async function GET(request: Request) {
   const auth = await apiAuth(["ADMIN", "MANAGER"]);
   if (!auth.ok) return auth.response;

@@ -22,3 +22,16 @@ export const PAYMENT_LABELS: Record<string, string> = {
 export function formatNumber(n: number) {
   return n.toLocaleString("en-US");
 }
+
+/** 0.2345 -> "23.5%"; null -> "—". */
+export function formatPercent(fraction: number | null | undefined, digits = 1) {
+  if (fraction === null || fraction === undefined || !Number.isFinite(fraction)) return "—";
+  return `${(fraction * 100).toFixed(digits)}%`;
+}
+
+export const SALE_STATUS_LABELS: Record<string, string> = {
+  COMPLETED: "Completed",
+  PARTIALLY_REFUNDED: "Partially refunded",
+  REFUNDED: "Refunded",
+  VOIDED: "Voided",
+};
