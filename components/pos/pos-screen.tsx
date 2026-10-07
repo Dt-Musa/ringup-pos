@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Receipt, toReceiptSale, type ReceiptSale } from "@/components/receipt";
 import { Modal } from "@/components/ui/modal";
@@ -12,6 +13,16 @@ const METHODS: Method[] = ["CASH", "MOBILE_MONEY", "CARD", "BANK_TRANSFER"];
 const QUICK_CASH = [5000, 10000, 20000, 50000];
 
 type Done = { receipt: ReceiptSale; saleId: string; change: number };
+
+function CartIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-[26px] w-[26px]">
+      <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L21 8H6" />
+      <circle cx="10" cy="20" r="1" />
+      <circle cx="18" cy="20" r="1" />
+    </svg>
+  );
+}
 
 export function PosScreen({ products, categories }: { products: PosProduct[]; categories: PosCategory[] }) {
   const router = useRouter();
@@ -28,6 +39,12 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
@@ -94,11 +111,13 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   }
 
   function remove(productId: string) {
+    if (cart.length === 1) setMobileCartOpen(false);
     setCart((c) => c.filter((x) => x.productId !== productId));
   }
 
   function resetSale() {
     setCart([]);
+    setMobileCartOpen(false);
     setDiscountValue("");
     setDiscountType("FIXED");
     setTendered("");
@@ -157,9 +176,9 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const inCart = (id: string) => cart.find((c) => c.productId === id)?.qty ?? 0;
 
   return (
-    <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-6">
+    <div className="grid min-w-0 gap-5 pb-16 md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
       {/* ---------- catalogue ---------- */}
-      <section>
+      <section className="min-w-0">
         <input
           ref={searchRef}
           autoFocus
@@ -172,7 +191,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
           aria-label="Search products"
           className="w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
         />
-        <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Categories">
+        <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Categories">
           {[{ id: "", name: "All" }, ...categories].map((c) => (
             <button
               key={c.id || "all"}
@@ -193,7 +212,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             No products match &ldquo;{query}&rdquo;.
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 xl:grid-cols-4" data-testid="product-grid">
+          <div className="mt-4 min-w-0 grid grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
             {filtered.map((p) => {
               const out = p.stockQty <= 0;
               const low = !out && p.stockQty <= p.minStock;
@@ -205,11 +224,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   disabled={out}
                   onClick={() => add(p)}
                   data-sku={p.sku}
-                  className={`relative flex min-h-10 flex-col rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
+                  className={`relative flex min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 max-sm:p-2 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
                     out ? "cursor-not-allowed opacity-50" : "hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
-                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 dark:bg-zinc-800">
+                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-12 max-sm:text-lg dark:bg-zinc-800">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.image} alt="" className="h-full w-full object-cover" />
@@ -217,9 +236,9 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                       p.name.slice(0, 1).toUpperCase()
                     )}
                   </div>
-                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-medium">{p.name}</div>
-                  <div className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-medium max-sm:min-h-[2rem] max-sm:text-xs">{p.name}</div>
+                  <div className="mt-1 text-sm font-semibold text-emerald-700 max-sm:mt-0.5 max-sm:text-xs dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 max-sm:mt-0.5 max-sm:text-[10px]">
                     <span className="font-mono">{p.sku}</span>
                     <span className={out ? "font-semibold text-red-600" : low ? "font-semibold text-amber-600" : ""}>
                       {out ? "Out of stock" : `${p.stockQty} left`}
@@ -238,20 +257,31 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
       </section>
 
       {/* ---------- cart ---------- */}
-      <aside className="lg:sticky lg:top-8 lg:self-start">
+      <aside
+        className={`${
+          mobileCartOpen
+            ? "fixed inset-x-0 bottom-0 z-[60] max-h-[85vh] overflow-y-auto rounded-t-2xl px-4 pb-[env(safe-area-inset-bottom)]"
+            : "hidden"
+        } lg:sticky lg:top-4 lg:block lg:self-start lg:overflow-visible lg:rounded-none lg:px-0`}
+      >
         <div className="rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3 sm:px-5 dark:border-zinc-800">
             <h2 className="font-semibold">Current sale</h2>
-            {cart.length > 0 && (
-              <button onClick={() => window.confirm("Clear the whole cart?") && resetSale()} className="text-sm text-red-600 hover:underline">
-                Clear
+            <div className="flex items-center gap-3">
+              {cart.length > 0 && (
+                <button onClick={() => window.confirm("Clear the whole cart?") && resetSale()} className="text-sm text-red-600 hover:underline">
+                  Clear
+                </button>
+              )}
+              <button type="button" onClick={() => setMobileCartOpen(false)} aria-label="Close cart" className="text-xl leading-none text-zinc-400 hover:text-zinc-700 lg:hidden">
+                ×
               </button>
-            )}
+            </div>
           </div>
 
           <div className="max-h-[35vh] overflow-y-auto sm:max-h-[320px]" data-testid="cart">
             {lines.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-zinc-500">Cart is empty. Tap a product to add it.</p>
+              <p className="px-5 py-10 text-center text-sm text-zinc-500">Your cart is empty. Tap a product to add it.</p>
             ) : (
               <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {lines.map((l) => (
@@ -431,13 +461,64 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             <button
               onClick={complete}
               disabled={!canComplete}
-              className="w-full rounded-lg bg-emerald-600 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="max-lg:sticky max-lg:bottom-0 max-lg:-mx-4 max-lg:mt-2 max-lg:w-[calc(100%+2rem)] max-lg:border-t max-lg:border-zinc-200 max-lg:bg-white max-lg:px-4 max-lg:py-3 max-lg:dark:border-zinc-800 max-lg:dark:bg-zinc-900 w-full rounded-lg bg-emerald-600 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? "Processing…" : `Complete sale · ${formatUGX(total)}`}
             </button>
           </div>
         </div>
       </aside>
+
+      {cart.length > 0 &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setMobileCartOpen(true)}
+            className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] z-50 flex h-12 animate-[cart-slide-up_180ms_ease-out] items-center justify-between overflow-hidden rounded-full border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg lg:hidden"
+            aria-label={`Open cart with ${cart.length} item${cart.length === 1 ? "" : " items"}`}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="relative flex h-7 w-7 shrink-0 items-center justify-center">
+                <CartIcon />
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-emerald-800">{cart.length}</span>
+              </span>
+              <span className="truncate whitespace-nowrap">{cart.length} item{cart.length === 1 ? "" : "s"}</span>
+            </span>
+            <span className="shrink-0 whitespace-nowrap">{formatUGX(total)}</span>
+          </button>,
+          document.body,
+        )}
+
+      {mobileCartOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileCartOpen(false)}
+          aria-label="Close cart"
+          className="fixed inset-0 z-50 bg-zinc-950/35 lg:hidden"
+        />
+      )}
+
+      {mounted &&
+        typeof document !== "undefined" &&
+        document.getElementById("mobile-pos-cart-trigger") &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setMobileCartOpen(true)}
+            aria-label={`Open cart${cart.length > 0 ? ` with ${cart.length} item${cart.length === 1 ? "" : "s"}` : ""}`}
+            className="relative mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-transform active:scale-95 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 lg:hidden"
+          >
+            <CartIcon />
+            {mounted &&
+              cart.length > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-700 px-1 text-[11px] font-bold leading-none text-white">
+                {cart.length}
+              </span>
+            )}
+          </button>,
+          document.getElementById("mobile-pos-cart-trigger")!,
+        )}
 
       {done && (
         <Modal title="Sale complete" onClose={closeDone}>

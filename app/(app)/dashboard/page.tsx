@@ -75,7 +75,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="dashboard-cards">
+      <div className="grid grid-cols-2 gap-4" data-testid="dashboard-cards">
         <Card label={my("Net sales today")} value={formatUGX(dayFin.revenue)} sub={dayFin.refunds ? `${formatUGX(dayFin.refunds)} refunded` : undefined} />
         <Card label={my("Net sales this week")} value={formatUGX(weekFin.revenue)} sub={`${sales(weekFin.salesCount)} since Monday`} />
         <Card label={my("Net sales this month")} value={formatUGX(monthFin.revenue)} sub={sales(monthFin.salesCount)} />
@@ -97,8 +97,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
+      <div className="mt-6 grid grid-cols-1 gap-6">
+        <div>
           <Panel title={my("Daily net sales")} subtitle={`Last 30 days (${formatRange(last30)}), after refunds`}>
             <TrendBarChart data={dailyData} />
           </Panel>
@@ -106,7 +106,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Panel title="Sales by payment method" subtitle="Net sales, last 30 days">
           <DonutChart data={methodData} />
         </Panel>
-        <div className="xl:col-span-2">
+        <div>
           <Panel title="Top 5 best-selling products" subtitle="Units sold (net of returns), last 30 days">
             <RankBarChart data={topData} />
           </Panel>
