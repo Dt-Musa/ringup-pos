@@ -178,7 +178,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   return (
     <div className="grid min-w-0 gap-5 pb-16 md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
       {/* ---------- catalogue ---------- */}
-      <section>
+      <section className="min-w-0">
         <input
           ref={searchRef}
           autoFocus
@@ -212,7 +212,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             No products match &ldquo;{query}&rdquo;.
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
+          <div className="mt-4 min-w-0 grid grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
             {filtered.map((p) => {
               const out = p.stockQty <= 0;
               const low = !out && p.stockQty <= p.minStock;
@@ -224,7 +224,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   disabled={out}
                   onClick={() => add(p)}
                   data-sku={p.sku}
-                  className={`relative flex min-h-10 flex-col rounded-lg border border-slate-200 bg-white p-3 max-sm:p-2 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
+                  className={`relative flex min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 max-sm:p-2 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
                     out ? "cursor-not-allowed opacity-50" : "hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
