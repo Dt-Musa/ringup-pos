@@ -16,7 +16,7 @@ type Done = { receipt: ReceiptSale; saleId: string; change: number };
 
 function CartIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-[26px] w-[26px]">
       <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L21 8H6" />
       <circle cx="10" cy="20" r="1" />
       <circle cx="18" cy="20" r="1" />
@@ -507,12 +507,12 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             type="button"
             onClick={() => setMobileCartOpen(true)}
             aria-label={`Open cart${cart.length > 0 ? ` with ${cart.length} item${cart.length === 1 ? "" : "s"}` : ""}`}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 lg:hidden"
+            className="relative mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-transform active:scale-95 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 lg:hidden"
           >
             <CartIcon />
             {mounted &&
               cart.length > 0 && (
-              <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-700 px-1 text-[10px] font-bold text-white">
+              <span className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-700 px-1 text-[11px] font-bold leading-none text-white">
                 {cart.length}
               </span>
             )}
