@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { ROLE_LABELS, type NavItem, type Role } from "@/lib/permissions";
+import { UserAvatar } from "@/components/user-avatar";
 
 type IconName = "dashboard" | "pos" | "products" | "inventory" | "sales" | "reports" | "users" | "more" | "logout";
 
@@ -68,11 +69,15 @@ function UserBlock({ userName, role, collapsed = false, onLogout }: { userName: 
   return (
     <div className={`border-t border-white/10 ${collapsed ? "px-2 py-4" : "p-4"}`}>
       {!collapsed && (
-        <div className="mb-3 min-w-0">
-          <div className="truncate text-sm font-semibold text-white">{userName}</div>
-          <div className="mt-0.5 text-xs uppercase tracking-wide text-zinc-500">{ROLE_LABELS[role]}</div>
+        <div className="mb-3 flex min-w-0 items-center gap-3">
+          <UserAvatar name={userName} />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-white">{userName}</div>
+            <div className="mt-0.5 truncate text-xs uppercase tracking-wide text-zinc-500">{ROLE_LABELS[role]}</div>
+          </div>
         </div>
       )}
+      {collapsed && <div className="mb-3 flex justify-center"><UserAvatar name={userName} size="sm" /></div>}
       <button
         type="button"
         onClick={onLogout}
@@ -180,9 +185,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
               className="mx-auto mb-4 h-1 w-10 cursor-grab touch-none rounded-full bg-zinc-300 active:cursor-grabbing dark:bg-zinc-700"
             />
             <div className="mb-3 flex items-center gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                {userName.trim().slice(0, 1).toUpperCase()}
-              </span>
+              <UserAvatar name={userName} />
               <div className="min-w-0">
                 <div className="truncate font-semibold">{userName}</div>
                 <div className="mt-0.5 text-xs text-zinc-500">{ROLE_LABELS[role]}</div>
