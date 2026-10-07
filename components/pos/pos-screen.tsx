@@ -105,11 +105,13 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   }
 
   function remove(productId: string) {
+    if (cart.length === 1) setMobileCartOpen(false);
     setCart((c) => c.filter((x) => x.productId !== productId));
   }
 
   function resetSale() {
     setCart([]);
+    setMobileCartOpen(false);
     setDiscountValue("");
     setDiscountType("FIXED");
     setTendered("");
@@ -204,7 +206,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             No products match &ldquo;{query}&rdquo;.
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 xl:grid-cols-4" data-testid="product-grid">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 pb-28 sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
             {filtered.map((p) => {
               const out = p.stockQty <= 0;
               const low = !out && p.stockQty <= p.minStock;
@@ -252,18 +254,23 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
       <aside
         className={`${
           mobileCartOpen
-            ? "fixed inset-x-0 bottom-16 z-20 max-h-[calc(100vh-7rem)] overflow-y-auto px-4"
-            : "hidden md:block"
-        } md:sticky md:top-8 md:self-start md:px-0`}
+            ? "fixed inset-x-0 bottom-16 z-40 max-h-[85vh] overflow-y-auto rounded-t-2xl px-4"
+            : "hidden"
+        } lg:sticky lg:top-4 lg:block lg:self-start lg:overflow-visible lg:rounded-none lg:px-0`}
       >
         <div className="rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3 sm:px-5 dark:border-zinc-800">
             <h2 className="font-semibold">Current sale</h2>
-            {cart.length > 0 && (
-              <button onClick={() => window.confirm("Clear the whole cart?") && resetSale()} className="text-sm text-red-600 hover:underline">
-                Clear
+            <div className="flex items-center gap-3">
+              {cart.length > 0 && (
+                <button onClick={() => window.confirm("Clear the whole cart?") && resetSale()} className="text-sm text-red-600 hover:underline">
+                  Clear
+                </button>
+              )}
+              <button type="button" onClick={() => setMobileCartOpen(false)} aria-label="Close cart" className="text-xl leading-none text-zinc-400 hover:text-zinc-700 lg:hidden">
+                ×
               </button>
-            )}
+            </div>
           </div>
 
           <div className="max-h-[35vh] overflow-y-auto sm:max-h-[320px]" data-testid="cart">
@@ -448,7 +455,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             <button
               onClick={complete}
               disabled={!canComplete}
-              className="w-full rounded-lg bg-emerald-600 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="max-lg:sticky max-lg:bottom-0 max-lg:-mx-4 max-lg:mt-2 max-lg:w-[calc(100%+2rem)] max-lg:border-t max-lg:border-zinc-200 max-lg:bg-white max-lg:px-4 max-lg:py-3 max-lg:dark:border-zinc-800 max-lg:dark:bg-zinc-900 w-full rounded-lg bg-emerald-600 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? "Processing…" : `Complete sale · ${formatUGX(total)}`}
             </button>
@@ -456,31 +463,30 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
         </div>
       </aside>
 
-      <button
-        type="button"
-        onClick={() => setMobileCartOpen(true)}
-        className="fixed inset-x-4 bottom-20 z-20 flex min-h-14 items-center justify-between rounded-xl border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg md:hidden"
-        aria-label={`View cart with ${cart.length} item${cart.length === 1 ? "" : "s"}`}
-      >
-        <span className="flex items-center gap-3">
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-white/15">
-            <CartIcon />
-            {cart.length > 0 && <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-emerald-800">{cart.length}</span>}
+      {cart.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setMobileCartOpen(true)}
+          className="fixed inset-x-3 bottom-16 z-20 flex h-12 animate-[cart-slide-up_180ms_ease-out] items-center justify-between rounded-full border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg lg:hidden"
+          aria-label={`View cart with ${cart.length} item${cart.length === 1 ? "" : " items"}`}
+        >
+          <span className="flex items-center gap-2">
+            <span className="relative flex h-7 w-7 items-center justify-center">
+              <CartIcon />
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-emerald-800">{cart.length}</span>
+            </span>
+            <span>{cart.length} item{cart.length === 1 ? "" : "s"}</span>
           </span>
-          <span className="text-left">
-            <span className="block">View cart</span>
-            <span className="block text-xs font-normal text-emerald-100">{cart.length === 0 ? "No items yet" : `${cart.length} item${cart.length === 1 ? "" : "s"} added`}</span>
-          </span>
-        </span>
-        <span className="text-base">{formatUGX(total)}</span>
-      </button>
+          <span>{formatUGX(total)}</span>
+        </button>
+      )}
 
       {mobileCartOpen && (
         <button
           type="button"
           onClick={() => setMobileCartOpen(false)}
           aria-label="Close cart"
-          className="fixed inset-0 z-10 bg-zinc-950/35 md:hidden"
+          className="fixed inset-0 z-30 bg-zinc-950/35 lg:hidden"
         />
       )}
 
