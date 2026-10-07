@@ -15,7 +15,7 @@ export default async function PosPage() {
   ]);
   return (
     <>
-      <PageHeader title="Point of Sale" description="Build a basket, take payment and issue receipts." />
+      <PageHeader title="Point of Sale" description="Build a basket, take payment and issue receipts." mobileCompact />
       <PosScreen products={products} categories={categories} />
     </>
   );

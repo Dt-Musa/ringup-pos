@@ -1,8 +1,16 @@
-export function PageHeader({ title, description }: { title: string; description?: string }) {
+export function PageHeader({
+  title,
+  description,
+  mobileCompact = false,
+}: {
+  title: string;
+  description?: string;
+  mobileCompact?: boolean;
+}) {
   return (
     <header className="mb-6 sm:mb-8">
-      <h1 className="text-2xl font-bold tracking-tight text-zinc-950 sm:text-3xl dark:text-white">{title}</h1>
-      {description && <p className="mt-1.5 max-w-3xl text-sm text-zinc-500 sm:text-base">{description}</p>}
+      <h1 className={`text-2xl font-bold tracking-tight text-zinc-950 sm:text-3xl dark:text-white ${mobileCompact ? "max-sm:text-xl" : ""}`}>{title}</h1>
+      {description && <p className={`mt-1.5 max-w-3xl text-sm text-zinc-500 sm:text-base ${mobileCompact ? "max-sm:hidden" : ""}`}>{description}</p>}
     </header>
   );
 }

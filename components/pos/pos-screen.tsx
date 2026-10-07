@@ -191,7 +191,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
           aria-label="Search products"
           className="w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
         />
-        <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Categories">
+        <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Categories">
           {[{ id: "", name: "All" }, ...categories].map((c) => (
             <button
               key={c.id || "all"}
@@ -224,11 +224,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   disabled={out}
                   onClick={() => add(p)}
                   data-sku={p.sku}
-                  className={`relative flex min-h-10 flex-col rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
+                  className={`relative flex min-h-10 flex-col rounded-lg border border-slate-200 bg-white p-3 max-sm:p-2 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
                     out ? "cursor-not-allowed opacity-50" : "hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
-                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 dark:bg-zinc-800">
+                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-12 max-sm:text-lg dark:bg-zinc-800">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.image} alt="" className="h-full w-full object-cover" />
@@ -236,9 +236,9 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                       p.name.slice(0, 1).toUpperCase()
                     )}
                   </div>
-                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-medium">{p.name}</div>
-                  <div className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-medium max-sm:min-h-[2rem] max-sm:text-xs">{p.name}</div>
+                  <div className="mt-1 text-sm font-semibold text-emerald-700 max-sm:mt-0.5 max-sm:text-xs dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 max-sm:mt-0.5 max-sm:text-[10px]">
                     <span className="font-mono">{p.sku}</span>
                     <span className={out ? "font-semibold text-red-600" : low ? "font-semibold text-amber-600" : ""}>
                       {out ? "Out of stock" : `${p.stockQty} left`}
