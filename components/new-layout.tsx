@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ROLE_LABELS, type NavItem, type Role } from "@/lib/permissions";
 import { UserAvatar } from "@/components/user-avatar";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 type IconName = "dashboard" | "pos" | "products" | "inventory" | "sales" | "reports" | "users" | "more" | "logout";
 
@@ -97,16 +98,30 @@ export function NewLayout({ children, items, userName, role }: { children: React
   const pathname = usePathname();
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [hasCartItems, setHasCartItems] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const dragStartY = useRef<number | null>(null);
   const visibleTabs = MOBILE_TABS.map((label) => items.find((item) => item.label === label)).filter((item): item is NavItem => Boolean(item));
   const moreItems = items.filter((item) => !MOBILE_TABS.includes(item.label));
   const moreActive = moreItems.some((item) => activeFor(pathname, item.href));
 
+  useEffect(() => {
+    function onCartState(event: Event) {
+      setHasCartItems((event as CustomEvent<{ hasItems: boolean }>).detail.hasItems);
+    }
+    window.addEventListener("ringup:cart-state", onCartState);
+    return () => window.removeEventListener("ringup:cart-state", onCartState);
+  }, []);
+
   async function logout() {
-    if (!window.confirm("Log out of RingUp?")) return;
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
     router.refresh();
+  }
+
+  function requestLogout() {
+    if (hasCartItems) setLogoutDialogOpen(true);
+    else void logout();
   }
 
   function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
@@ -135,7 +150,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
         <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Primary navigation">
           {items.map((item) => <NavLink key={item.href} item={item} />)}
         </nav>
-        <UserBlock userName={userName} role={role} onLogout={logout} />
+        <UserBlock userName={userName} role={role} onLogout={requestLogout} />
       </aside>
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col bg-zinc-950 text-zinc-100 md:flex xl:hidden">
@@ -145,7 +160,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
         <nav className="flex-1 space-y-1 p-2" aria-label="Primary navigation">
           {items.map((item) => <NavLink key={item.href} item={item} collapsed />)}
         </nav>
-        <UserBlock userName={userName} role={role} collapsed onLogout={logout} />
+        <UserBlock userName={userName} role={role} collapsed onLogout={requestLogout} />
       </aside>
 
       <div className="min-h-screen pb-20 md:pl-16 xl:pl-64">
@@ -193,13 +208,25 @@ export function NewLayout({ children, items, userName, role }: { children: React
             </div>
             <nav className="space-y-1">
               {moreItems.map((item) => <NavLink key={item.href} item={item} mobile onNavigate={() => setMoreOpen(false)} />)}
-              <button type="button" onClick={logout} className="mt-2 flex min-h-[52px] w-full items-center gap-3 border-t border-zinc-200 pt-3 text-left text-sm font-semibold text-red-700 active:scale-[0.98] dark:border-zinc-800 dark:text-red-400">
+              <button type="button" onClick={requestLogout} className="mt-2 flex min-h-[52px] w-full items-center gap-3 border-t border-zinc-200 pt-3 text-left text-sm font-semibold text-red-700 active:scale-[0.98] dark:border-zinc-800 dark:text-red-400">
                 <Icon name="logout" />
                 Log out
               </button>
             </nav>
           </section>
         </div>
+      )}
+      {logoutDialogOpen && (
+        <ConfirmModal
+          title="Leave RingUp?"
+          confirmLabel="Log out"
+          cancelLabel="Stay"
+          danger
+          onConfirm={() => void logout()}
+          onClose={() => setLogoutDialogOpen(false)}
+        >
+          You have items in the cart. Log out anyway?
+        </ConfirmModal>
       )}
     </div>
   );
