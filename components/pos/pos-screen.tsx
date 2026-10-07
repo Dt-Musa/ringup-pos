@@ -224,7 +224,9 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
               aria-selected={categoryId === c.id}
               onClick={() => setCategoryId(c.id)}
               className={`min-h-10 rounded-full px-3 py-1.5 text-sm ${
-                categoryId === c.id ? "bg-emerald-600 text-white" : "bg-white text-zinc-700 shadow-sm hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-200"
+                categoryId === c.id
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/15"
+                  : "bg-white text-zinc-800 shadow-md shadow-zinc-200/70 hover:bg-slate-50 hover:shadow-lg dark:bg-zinc-900 dark:text-zinc-100"
               }`}
             >
               {c.name}
@@ -237,7 +239,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             No products match &ldquo;{query}&rdquo;.
           </div>
         ) : (
-          <div className="mt-4 min-w-0 grid grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
+          <div className="mt-4 min-w-0 grid auto-rows-fr grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
             {filtered.map((p) => {
               const out = p.stockQty <= 0;
               const low = !out && p.stockQty <= p.minStock;
@@ -249,8 +251,8 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   disabled={out}
                   onClick={() => add(p)}
                   data-sku={p.sku}
-                  className={`relative flex min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 max-sm:p-2 text-left shadow-sm transition dark:border-zinc-800 dark:bg-zinc-900 ${
-                    out ? "cursor-not-allowed opacity-50" : "hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
+                  className={`relative flex h-full min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 text-left shadow-md shadow-zinc-200/60 transition max-sm:p-2 dark:border-zinc-800 dark:bg-zinc-900 ${
+                    out ? "cursor-not-allowed opacity-50" : "hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-900/10 hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
                   <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-12 max-sm:text-lg dark:bg-zinc-800">

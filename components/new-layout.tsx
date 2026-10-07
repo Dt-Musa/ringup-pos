@@ -30,12 +30,12 @@ function Icon({ name }: { name: IconName }) {
     sales: "M5 4h14v16H5V4Zm3 4h8M8 12h8M8 16h5",
     reports: "M5 19V9m7 10V5m7 14v-7",
     users: "M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1m6-9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm6-7a3 3 0 0 1 0 6m2 7v-1a4 4 0 0 0-3-3",
-    more: "M5 12h.01M12 12h.01M19 12h.01",
+    more: "M5 12a1.5 1.5 0 1 0 0 .01M12 12a1.5 1.5 0 1 0 0 .01M19 12a1.5 1.5 0 1 0 0 .01",
     logout: "M10 5H5v14h5m5-4 4-3-4-3m4 3H9",
   };
 
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={name === "more" ? "h-6 w-6" : "h-5 w-5"}>
       <path d={paths[name]} />
     </svg>
   );
@@ -163,7 +163,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
         <UserBlock userName={userName} role={role} collapsed onLogout={requestLogout} />
       </aside>
 
-      <div className="min-h-screen pb-20 md:pl-16 xl:pl-64">
+      <div className="min-h-screen pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 md:pl-16 xl:pl-64">
         <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900 md:hidden">
           <div className="flex w-full min-w-0 items-center justify-between gap-3">
             <div className="text-lg font-bold tracking-tight">RingUp POS</div>
@@ -173,7 +173,11 @@ export function NewLayout({ children, items, userName, role }: { children: React
         <main className="min-w-0 overflow-x-hidden bg-zinc-50 px-4 py-5 sm:px-6 sm:py-7 xl:px-8 xl:py-8 dark:bg-zinc-950">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-5 border-t border-zinc-200 bg-white/95 backdrop-blur md:hidden dark:border-zinc-800 dark:bg-zinc-900/95" aria-label="Mobile navigation">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 grid h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden dark:border-zinc-800 dark:bg-zinc-900/95"
+        style={{ gridTemplateColumns: `repeat(${visibleTabs.length + 1}, minmax(0, 1fr))` }}
+        aria-label="Mobile navigation"
+      >
         {visibleTabs.map((item) => {
           const active = activeFor(pathname, item.href);
           return (
