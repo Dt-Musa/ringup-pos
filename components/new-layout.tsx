@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ROLE_LABELS, type NavItem, type Role } from "@/lib/permissions";
 
 type IconName = "dashboard" | "pos" | "products" | "inventory" | "sales" | "reports" | "users" | "more" | "logout";
@@ -43,7 +43,7 @@ function activeFor(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ item, collapsed = false, onNavigate }: { item: NavItem; collapsed?: boolean; onNavigate?: () => void }) {
+function NavLink({ item, collapsed = false, mobile = false, onNavigate }: { item: NavItem; collapsed?: boolean; mobile?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
   const active = activeFor(pathname, item.href);
   return (
@@ -52,8 +52,10 @@ function NavLink({ item, collapsed = false, onNavigate }: { item: NavItem; colla
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
-      className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${
-        active ? "bg-emerald-600 text-white" : "text-zinc-400 hover:bg-white/10 hover:text-white"
+      className={`flex items-center gap-3 px-3 text-sm font-medium transition ${
+        mobile ? "min-h-[52px] w-full rounded-xl text-zinc-800 active:scale-[0.98] active:bg-zinc-100 dark:text-zinc-100 dark:active:bg-zinc-800" : "min-h-11 rounded-lg"
+      } ${
+        active ? "bg-emerald-600 text-white" : mobile ? "hover:bg-zinc-100 dark:hover:bg-zinc-800" : "text-zinc-400 hover:bg-white/10 hover:text-white"
       } ${collapsed ? "justify-center px-0" : ""}`}
     >
       <Icon name={ICONS[item.label]} />
@@ -90,6 +92,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
   const pathname = usePathname();
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
+  const dragStartY = useRef<number | null>(null);
   const visibleTabs = MOBILE_TABS.map((label) => items.find((item) => item.label === label)).filter((item): item is NavItem => Boolean(item));
   const moreItems = items.filter((item) => !MOBILE_TABS.includes(item.label));
   const moreActive = moreItems.some((item) => activeFor(pathname, item.href));
@@ -99,6 +102,22 @@ export function NewLayout({ children, items, userName, role }: { children: React
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
     router.refresh();
+  }
+
+  function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    dragStartY.current = event.clientY;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onSheetPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (dragStartY.current !== null && event.clientY - dragStartY.current > 72) {
+      dragStartY.current = null;
+      setMoreOpen(false);
+    }
+  }
+
+  function onSheetPointerUp() {
+    dragStartY.current = null;
   }
 
   return (
@@ -153,15 +172,25 @@ export function NewLayout({ children, items, userName, role }: { children: React
       {moreOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="More navigation">
           <button type="button" aria-label="Close more navigation" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-zinc-950/45" />
-          <section className="absolute inset-x-0 bottom-0 rounded-t-3xl border-t border-zinc-200 bg-white px-5 pb-7 pt-3 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-            <div className="mb-4 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-              <div className="font-semibold">{userName}</div>
-              <div className="text-xs uppercase tracking-wide text-zinc-500">{ROLE_LABELS[role]}</div>
+          <section className="absolute inset-x-0 bottom-0 min-h-[40vh] max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-zinc-200 bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+            <div
+              onPointerDown={onSheetPointerDown}
+              onPointerMove={onSheetPointerMove}
+              onPointerUp={onSheetPointerUp}
+              className="mx-auto mb-4 h-1 w-10 cursor-grab touch-none rounded-full bg-zinc-300 active:cursor-grabbing dark:bg-zinc-700"
+            />
+            <div className="mb-3 flex items-center gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-800">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                {userName.trim().slice(0, 1).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <div className="truncate font-semibold">{userName}</div>
+                <div className="mt-0.5 text-xs text-zinc-500">{ROLE_LABELS[role]}</div>
+              </div>
             </div>
             <nav className="space-y-1">
-              {moreItems.map((item) => <NavLink key={item.href} item={item} onNavigate={() => setMoreOpen(false)} />)}
-              <button type="button" onClick={logout} className="flex min-h-11 w-full items-center gap-3 border-t border-zinc-200 pt-3 text-left text-sm font-medium text-red-700 dark:border-zinc-800">
+              {moreItems.map((item) => <NavLink key={item.href} item={item} mobile onNavigate={() => setMoreOpen(false)} />)}
+              <button type="button" onClick={logout} className="mt-2 flex min-h-[52px] w-full items-center gap-3 border-t border-zinc-200 pt-3 text-left text-sm font-semibold text-red-700 active:scale-[0.98] dark:border-zinc-800 dark:text-red-400">
                 <Icon name="logout" />
                 Log out
               </button>
