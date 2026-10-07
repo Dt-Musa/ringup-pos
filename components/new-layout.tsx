@@ -92,8 +92,6 @@ export function NewLayout({ children, items, userName, role }: { children: React
   const [moreOpen, setMoreOpen] = useState(false);
   const visibleTabs = MOBILE_TABS.map((label) => items.find((item) => item.label === label)).filter((item): item is NavItem => Boolean(item));
   const moreItems = items.filter((item) => !MOBILE_TABS.includes(item.label));
-  const currentItem = items.find((item) => activeFor(pathname, item.href));
-  const title = currentItem?.label ?? "RingUp";
   const moreActive = moreItems.some((item) => activeFor(pathname, item.href));
 
   async function logout() {
@@ -128,11 +126,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
 
       <div className="min-h-screen pb-20 md:pl-16 xl:pl-64">
         <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900 md:hidden">
-          <div>
-            <div className="text-lg font-bold tracking-tight">{title}</div>
-            <div className="mt-0.5 text-xs text-zinc-500">RingUp POS</div>
-          </div>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">{ROLE_LABELS[role]}</span>
+          <div className="text-lg font-bold tracking-tight">RingUp POS</div>
         </header>
         <main className="min-w-0 overflow-x-hidden bg-zinc-50 px-4 py-5 sm:px-6 sm:py-7 xl:px-8 xl:py-8 dark:bg-zinc-950">{children}</main>
       </div>

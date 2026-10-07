@@ -13,6 +13,16 @@ const QUICK_CASH = [5000, 10000, 20000, 50000];
 
 type Done = { receipt: ReceiptSale; saleId: string; change: number };
 
+function CartIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+      <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L21 8H6" />
+      <circle cx="10" cy="20" r="1" />
+      <circle cx="18" cy="20" r="1" />
+    </svg>
+  );
+}
+
 export function PosScreen({ products, categories }: { products: PosProduct[]; categories: PosCategory[] }) {
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -449,11 +459,20 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
       <button
         type="button"
         onClick={() => setMobileCartOpen(true)}
-        className="fixed inset-x-4 bottom-20 z-20 flex min-h-12 items-center justify-between rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg md:hidden"
+        className="fixed inset-x-4 bottom-20 z-20 flex min-h-14 items-center justify-between rounded-xl border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg md:hidden"
         aria-label={`View cart with ${cart.length} item${cart.length === 1 ? "" : "s"}`}
       >
-        <span>View cart ({cart.length})</span>
-        <span>{formatUGX(total)}</span>
+        <span className="flex items-center gap-3">
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-white/15">
+            <CartIcon />
+            {cart.length > 0 && <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-emerald-800">{cart.length}</span>}
+          </span>
+          <span className="text-left">
+            <span className="block">View cart</span>
+            <span className="block text-xs font-normal text-emerald-100">{cart.length === 0 ? "No items yet" : `${cart.length} item${cart.length === 1 ? "" : "s"} added`}</span>
+          </span>
+        </span>
+        <span className="text-base">{formatUGX(total)}</span>
       </button>
 
       {mobileCartOpen && (
