@@ -1,7 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Receipt, toReceiptSale, type ReceiptSale } from "@/components/receipt";
 import { Modal } from "@/components/ui/modal";
@@ -40,6 +40,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
@@ -494,7 +499,8 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
         />
       )}
 
-      {typeof document !== "undefined" &&
+      {mounted &&
+        typeof document !== "undefined" &&
         document.getElementById("mobile-pos-cart-trigger") &&
         createPortal(
           <button
@@ -504,7 +510,8 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 lg:hidden"
           >
             <CartIcon />
-            {cart.length > 0 && (
+            {mounted &&
+              cart.length > 0 && (
               <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-700 px-1 text-[10px] font-bold text-white">
                 {cart.length}
               </span>
