@@ -7,6 +7,7 @@ export function ConfirmModal({
   title,
   children,
   confirmLabel,
+  cancelLabel = "Cancel",
   danger,
   busy,
   error,
@@ -16,6 +17,7 @@ export function ConfirmModal({
   title: string;
   children: React.ReactNode;
   confirmLabel: string;
+  cancelLabel?: string;
   danger?: boolean;
   busy?: boolean;
   error?: string | null;
@@ -32,10 +34,10 @@ export function ConfirmModal({
         )}
         <div className="text-sm text-zinc-600 dark:text-zinc-300">{children}</div>
         <div className="flex justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <button type="button" onClick={onClose} disabled={busy} className={btnSecondary}>
-            Cancel
+          <button type="button" onClick={onClose} disabled={busy} className={`${btnSecondary} min-h-12`}>
+            {cancelLabel}
           </button>
-          <button type="button" onClick={onConfirm} disabled={busy} className={danger ? btnDanger : btnPrimary} autoFocus>
+          <button type="button" onClick={onConfirm} disabled={busy} className={`${danger ? btnDanger : btnPrimary} min-h-12`} autoFocus>
             {busy ? "Working…" : confirmLabel}
           </button>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Receipt, toReceiptSale, type ReceiptSale } from "@/components/receipt";
 import { Modal } from "@/components/ui/modal";
@@ -40,6 +40,8 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  const [clearUndo, setClearUndo] = useState<{ cart: typeof cart; discountType: typeof discountType; discountValue: string } | null>(null);
+  const clearUndoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -47,6 +49,13 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   );
 
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("ringup:cart-state", { detail: { hasItems: cart.length > 0 } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("ringup:cart-state", { detail: { hasItems: false } }));
+    };
+  }, [cart.length]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -124,6 +133,22 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
     setReference("");
     setMethod("CASH");
     setError(null);
+  }
+
+  function clearCart() {
+    if (clearUndoTimer.current) clearTimeout(clearUndoTimer.current);
+    setClearUndo({ cart: [...cart], discountType, discountValue });
+    resetSale();
+    clearUndoTimer.current = setTimeout(() => setClearUndo(null), 5000);
+  }
+
+  function undoClearCart() {
+    if (!clearUndo) return;
+    if (clearUndoTimer.current) clearTimeout(clearUndoTimer.current);
+    setCart(clearUndo.cart);
+    setDiscountType(clearUndo.discountType);
+    setDiscountValue(clearUndo.discountValue);
+    setClearUndo(null);
   }
 
   function onSearchKey(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -269,7 +294,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             <h2 className="font-semibold">Current sale</h2>
             <div className="flex items-center gap-3">
               {cart.length > 0 && (
-                <button onClick={() => window.confirm("Clear the whole cart?") && resetSale()} className="text-sm text-red-600 hover:underline">
+                <button onClick={clearCart} className="text-sm text-red-600 hover:underline">
                   Clear
                 </button>
               )}
@@ -488,6 +513,17 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             <span className="shrink-0 whitespace-nowrap">{formatUGX(total)}</span>
           </button>,
           document.body,
+        )}
+
+      {clearUndo && mounted && typeof document !== "undefined" &&
+        createPortal(
+         <div className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+4.25rem)] z-[55] flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm shadow-lg dark:border-zinc-700 dark:bg-zinc-900 lg:inset-x-auto lg:bottom-4 lg:right-4" role="status">
+           <span>Cart cleared</span>
+           <button type="button" onClick={undoClearCart} className="min-h-11 rounded-md px-3 font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40">
+             Undo
+           </button>
+         </div>,
+         document.body,
         )}
 
       {mobileCartOpen && (

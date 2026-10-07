@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { btnPrimary, btnSecondary } from "@/components/ui/modal";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { formatUGX } from "@/lib/format";
 import { CategoryManagerModal } from "./category-manager-modal";
 import { ProductFormModal } from "./product-form-modal";
@@ -15,9 +16,9 @@ export function ProductsManager({ products, categories }: { products: ProductRow
   const [modal, setModal] = useState<ModalState>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deactivateProduct, setDeactivateProduct] = useState<ProductRow | null>(null);
 
   async function toggleActive(p: ProductRow) {
-    if (p.active && !window.confirm(`Deactivate "${p.name}"? It will be hidden from the POS but its history is kept.`)) return;
     setBusyId(p.id);
     setError(null);
     const res = await fetch(`/api/products/${p.id}`, {
@@ -26,7 +27,10 @@ export function ProductsManager({ products, categories }: { products: ProductRow
       body: JSON.stringify({ active: !p.active }),
     });
     setBusyId(null);
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      setDeactivateProduct(null);
+      router.refresh();
+    }
     else setError((await res.json().catch(() => ({}))).error ?? "Could not update the product");
   }
 
@@ -106,7 +110,7 @@ export function ProductsManager({ products, categories }: { products: ProductRow
                       Edit
                     </button>
                     <button
-                      onClick={() => toggleActive(p)}
+                      onClick={() => p.active ? setDeactivateProduct(p) : void toggleActive(p)}
                       disabled={busyId === p.id}
                       className={`${p.active ? "text-red-700" : "text-emerald-800"} inline-flex min-h-10 items-center font-semibold underline decoration-current/30 underline-offset-2 hover:decoration-current disabled:opacity-50`}
                     >
@@ -124,6 +128,19 @@ export function ProductsManager({ products, categories }: { products: ProductRow
         <ProductFormModal key={modal.product?.id ?? "new"} product={modal.product} categories={categories} onClose={() => setModal(null)} />
       )}
       {modal?.kind === "categories" && <CategoryManagerModal categories={categories} onClose={() => setModal(null)} />}
+      {deactivateProduct && (
+        <ConfirmModal
+          title={`Deactivate ${deactivateProduct.name}?`}
+          confirmLabel="Deactivate"
+          danger
+          busy={busyId === deactivateProduct.id}
+          error={error}
+          onConfirm={() => void toggleActive(deactivateProduct)}
+          onClose={() => setDeactivateProduct(null)}
+        >
+          It will be hidden from the POS but its history will be kept.
+        </ConfirmModal>
+      )}
     </>
   );
 }
