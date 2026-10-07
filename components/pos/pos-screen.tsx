@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Receipt, toReceiptSale, type ReceiptSale } from "@/components/receipt";
@@ -206,7 +207,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             No products match &ldquo;{query}&rdquo;.
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-2.5 pb-28 sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
             {filtered.map((p) => {
               const out = p.stockQty <= 0;
               const low = !out && p.stockQty <= p.minStock;
@@ -254,7 +255,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
       <aside
         className={`${
           mobileCartOpen
-            ? "fixed inset-x-0 bottom-16 z-40 max-h-[85vh] overflow-y-auto rounded-t-2xl px-4"
+            ? "fixed inset-x-0 bottom-0 z-[60] max-h-[85vh] overflow-y-auto rounded-t-2xl px-4 pb-[env(safe-area-inset-bottom)]"
             : "hidden"
         } lg:sticky lg:top-4 lg:block lg:self-start lg:overflow-visible lg:rounded-none lg:px-0`}
       >
@@ -486,9 +487,28 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
           type="button"
           onClick={() => setMobileCartOpen(false)}
           aria-label="Close cart"
-          className="fixed inset-0 z-30 bg-zinc-950/35 lg:hidden"
+          className="fixed inset-0 z-50 bg-zinc-950/35 lg:hidden"
         />
       )}
+
+      {typeof document !== "undefined" &&
+        document.getElementById("mobile-pos-cart-trigger") &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setMobileCartOpen(true)}
+            aria-label={`Open cart${cart.length > 0 ? ` with ${cart.length} item${cart.length === 1 ? "" : "s"}` : ""}`}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 lg:hidden"
+          >
+            <CartIcon />
+            {cart.length > 0 && (
+              <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-700 px-1 text-[10px] font-bold text-white">
+                {cart.length}
+              </span>
+            )}
+          </button>,
+          document.getElementById("mobile-pos-cart-trigger")!,
+        )}
 
       {done && (
         <Modal title="Sale complete" onClose={closeDone}>
