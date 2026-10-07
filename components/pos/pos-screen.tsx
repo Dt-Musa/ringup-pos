@@ -468,8 +468,8 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
         <button
           type="button"
           onClick={() => setMobileCartOpen(true)}
-          className="fixed inset-x-3 bottom-16 z-20 flex h-12 animate-[cart-slide-up_180ms_ease-out] items-center justify-between rounded-full border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg lg:hidden"
-          aria-label={`View cart with ${cart.length} item${cart.length === 1 ? "" : " items"}`}
+          className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] z-50 flex h-12 animate-[cart-slide-up_180ms_ease-out] items-center justify-between overflow-hidden rounded-full border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg lg:hidden"
+          aria-label={`Open cart with ${cart.length} item${cart.length === 1 ? "" : " items"}`}
         >
           <span className="flex items-center gap-2">
             <span className="relative flex h-7 w-7 items-center justify-center">
