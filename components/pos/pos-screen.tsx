@@ -276,7 +276,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
 
           <div className="max-h-[35vh] overflow-y-auto sm:max-h-[320px]" data-testid="cart">
             {lines.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-zinc-500">Cart is empty. Tap a product to add it.</p>
+              <p className="px-5 py-10 text-center text-sm text-zinc-500">Your cart is empty. Tap a product to add it.</p>
             ) : (
               <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {lines.map((l) => (
@@ -464,23 +464,26 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
         </div>
       </aside>
 
-      {cart.length > 0 && (
-        <button
-          type="button"
-          onClick={() => setMobileCartOpen(true)}
-          className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] z-50 flex h-12 animate-[cart-slide-up_180ms_ease-out] items-center justify-between overflow-hidden rounded-full border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg lg:hidden"
-          aria-label={`Open cart with ${cart.length} item${cart.length === 1 ? "" : " items"}`}
-        >
-          <span className="flex items-center gap-2">
-            <span className="relative flex h-7 w-7 items-center justify-center">
-              <CartIcon />
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-emerald-800">{cart.length}</span>
+      {cart.length > 0 &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setMobileCartOpen(true)}
+            className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] z-50 flex h-12 animate-[cart-slide-up_180ms_ease-out] items-center justify-between overflow-hidden rounded-full border border-emerald-800 bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg lg:hidden"
+            aria-label={`Open cart with ${cart.length} item${cart.length === 1 ? "" : " items"}`}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="relative flex h-7 w-7 shrink-0 items-center justify-center">
+                <CartIcon />
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-emerald-800">{cart.length}</span>
+              </span>
+              <span className="truncate whitespace-nowrap">{cart.length} item{cart.length === 1 ? "" : "s"}</span>
             </span>
-            <span>{cart.length} item{cart.length === 1 ? "" : "s"}</span>
-          </span>
-          <span>{formatUGX(total)}</span>
-        </button>
-      )}
+            <span className="shrink-0 whitespace-nowrap">{formatUGX(total)}</span>
+          </button>,
+          document.body,
+        )}
 
       {mobileCartOpen && (
         <button
