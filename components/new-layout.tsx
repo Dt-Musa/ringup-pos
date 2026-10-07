@@ -166,7 +166,10 @@ export function NewLayout({ children, items, userName, role }: { children: React
       <div className="min-h-screen pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 md:pl-16 xl:pl-64">
         <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900 md:hidden">
           <div className="flex w-full min-w-0 items-center justify-between gap-3">
-            <div className="text-lg font-bold tracking-tight">RingUp POS</div>
+            <div className="flex items-center gap-2 text-lg font-bold tracking-tight">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white shadow-sm shadow-emerald-900/20">R</span>
+              <span>RingUp POS</span>
+            </div>
             <div id="mobile-pos-cart-trigger" className="shrink-0" />
           </div>
         </header>
