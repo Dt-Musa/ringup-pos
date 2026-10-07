@@ -28,6 +28,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
@@ -157,7 +158,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const inCart = (id: string) => cart.find((c) => c.productId === id)?.qty ?? 0;
 
   return (
-    <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-6">
+    <div className="grid min-w-0 gap-5 pb-16 md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
       {/* ---------- catalogue ---------- */}
       <section>
         <input
@@ -238,7 +239,13 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
       </section>
 
       {/* ---------- cart ---------- */}
-      <aside className="lg:sticky lg:top-8 lg:self-start">
+      <aside
+        className={`${
+          mobileCartOpen
+            ? "fixed inset-x-0 bottom-16 z-20 max-h-[calc(100vh-7rem)] overflow-y-auto px-4"
+            : "hidden md:block"
+        } md:sticky md:top-8 md:self-start md:px-0`}
+      >
         <div className="rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3 sm:px-5 dark:border-zinc-800">
             <h2 className="font-semibold">Current sale</h2>
@@ -438,6 +445,25 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
           </div>
         </div>
       </aside>
+
+      <button
+        type="button"
+        onClick={() => setMobileCartOpen(true)}
+        className="fixed inset-x-4 bottom-20 z-20 flex min-h-12 items-center justify-between rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg md:hidden"
+        aria-label={`View cart with ${cart.length} item${cart.length === 1 ? "" : "s"}`}
+      >
+        <span>View cart ({cart.length})</span>
+        <span>{formatUGX(total)}</span>
+      </button>
+
+      {mobileCartOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileCartOpen(false)}
+          aria-label="Close cart"
+          className="fixed inset-0 z-10 bg-zinc-950/35 md:hidden"
+        />
+      )}
 
       {done && (
         <Modal title="Sale complete" onClose={closeDone}>
