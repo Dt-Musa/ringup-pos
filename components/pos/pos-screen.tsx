@@ -322,9 +322,10 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                     <div className="mt-1 flex items-center justify-between">
                       <div className="flex items-center">
                         <button
+                          type="button"
                           onClick={() => (l.qty <= 1 ? remove(l.productId) : setQty(l.productId, l.qty - 1))}
                           aria-label="Decrease quantity"
-                          className="h-8 w-8 rounded-l-md border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                          className="h-8 w-8 shrink-0 rounded-l-md border border-zinc-300 hover:bg-zinc-100 max-lg:h-10 max-lg:w-10 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         >
                           −
                         </button>
@@ -335,12 +336,13 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                           value={l.qty}
                           onChange={(e) => setQty(l.productId, e.target.valueAsNumber)}
                           aria-label={`Quantity of ${l.product?.name ?? "item"}`}
-                          className="h-8 w-14 border-y border-zinc-300 bg-transparent text-center dark:border-zinc-700 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                          className="h-8 w-14 border-y border-zinc-300 bg-transparent text-center dark:border-zinc-700 max-lg:h-10"
                         />
                         <button
+                          type="button"
                           onClick={() => setQty(l.productId, l.qty + 1)}
                           aria-label="Increase quantity"
-                          className="h-8 w-8 rounded-r-md border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                          className="h-8 w-8 shrink-0 rounded-r-md border border-zinc-300 hover:bg-zinc-100 max-lg:h-10 max-lg:w-10 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         >
                           +
                         </button>
