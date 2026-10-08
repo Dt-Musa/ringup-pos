@@ -165,7 +165,7 @@ export function ProductFormModal({
             <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-md border border-dashed border-zinc-300 bg-zinc-50 text-xs text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800">
               {image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={image} alt="Product" className="h-full w-full object-cover" />
+                <img src={image} alt="Product" className="h-full w-full object-contain" />
               ) : (
                 "No image"
               )}

@@ -83,7 +83,7 @@ export function ProductsManager({ products, categories }: { products: ProductRow
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-zinc-100 text-xs text-zinc-400 dark:bg-zinc-800">
                         {p.image ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.image} alt="" className="h-full w-full object-cover" />
+                          <img src={p.image} alt="" className="h-full w-full object-contain" />
                         ) : (
                           p.name.slice(0, 1).toUpperCase()
                         )}

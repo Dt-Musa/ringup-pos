@@ -258,7 +258,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-12 max-sm:text-lg dark:bg-zinc-800">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.image} alt="" className="h-full w-full object-cover" />
+                      <img src={p.image} alt="" className="h-full w-full object-contain" />
                     ) : (
                       p.name.slice(0, 1).toUpperCase()
                     )}
