@@ -2,6 +2,7 @@ import { PosScreen } from "@/components/pos/pos-screen";
 import { PageHeader } from "@/components/page-header";
 import { guardPage } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { productImagePath } from "@/lib/product-images";
 
 export default async function PosPage() {
   await guardPage("/pos");
@@ -13,10 +14,11 @@ export default async function PosPage() {
     }),
     prisma.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
+  const productsWithImages = products.map((product) => ({ ...product, image: productImagePath(product.name, product.image) }));
   return (
     <>
       <PageHeader title="Point of Sale" description="Build a basket, take payment and issue receipts." mobileCompact />
-      <PosScreen products={products} categories={categories} />
+      <PosScreen products={productsWithImages} categories={categories} />
     </>
   );
 }

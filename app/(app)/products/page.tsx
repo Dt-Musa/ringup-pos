@@ -5,6 +5,7 @@ import { ProductsManager } from "@/components/products/products-manager";
 import { guardPage } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { listProducts } from "@/lib/products";
+import { productImagePath } from "@/lib/product-images";
 import { listProductsSchema } from "@/lib/validation/product";
 
 type SP = Record<string, string | string[] | undefined>;
@@ -25,7 +26,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     id: p.id,
     sku: p.sku,
     name: p.name,
-    image: p.image,
+    image: productImagePath(p.name, p.image),
     categoryId: p.categoryId,
     categoryName: p.category.name,
     buyingCost: p.buyingCost,

@@ -14,7 +14,7 @@ const qty = (label: string) =>
     .min(0, `${label} cannot be negative`)
     .max(10_000_000, `${label} is too large`);
 
-export const IMAGE_PATH_RE = /^\/uploads\/[a-f0-9-]{36}\.(jpg|png|webp|gif)$/;
+export const IMAGE_PATH_RE = /^\/(?:uploads\/[a-f0-9-]{36}\.(jpg|png|webp|gif)|assets\/POS\/.+\.webp)$/;
 
 export const productFields = {
   name: z.string({ error: "Name is required" }).trim().min(1, "Name is required").max(100, "Name must be 100 characters or fewer"),
