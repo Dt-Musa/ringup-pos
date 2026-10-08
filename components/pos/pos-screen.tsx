@@ -255,10 +255,10 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                     out ? "cursor-not-allowed opacity-50" : "hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-900/10 hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
-                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-12 max-sm:text-lg dark:bg-zinc-800">
+                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-20 max-sm:text-lg dark:bg-zinc-800">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.image} alt="" className="h-full w-full object-contain" />
+                      <img src={p.image} alt="" className="h-full w-full p-1 object-contain" />
                     ) : (
                       p.name.slice(0, 1).toUpperCase()
                     )}
