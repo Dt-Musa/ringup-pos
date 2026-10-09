@@ -125,7 +125,7 @@ export default function Home() {
           <Brand />
           <div className="flex flex-col gap-1 sm:items-end">
             <p>Email: hello@ringup.com</p>
-            <p>Phone: +256 7407031</p>
+            <p>Phone: +256 740704031</p>
           </div>
         </footer>
       </div>
