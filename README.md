@@ -51,6 +51,11 @@ All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`*
 | `UPLOAD_DIR` | where product images are stored (default `./uploads`; served via `/uploads/<file>`) |
 | `MAX_UPLOAD_BYTES` | max image size, default 2 MB |
 | `SESSION_COOKIE_SECURE` | optional; defaults to `true` in production, `false` in dev |
+| `RESEND_API_KEY` | server-side Resend API credential for future email delivery |
+| `RESEND_FROM_EMAIL` | approved sender address for future email delivery |
+| `APP_URL` | public application origin used to construct future password-reset links |
+
+Password recovery email configuration is reserved for a future feature and is not required by the application yet. For local development, use `http://localhost:3000` as `APP_URL`. Production deployments must use the actual HTTPS application origin. Configure real Resend credentials in the local `.env` file and in the deployment platform's environment settings; never commit them to Git. These variables are intentionally server-side and must not be renamed with a `NEXT_PUBLIC_` prefix.
 
 ### Scripts
 
