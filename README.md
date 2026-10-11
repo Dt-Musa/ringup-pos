@@ -51,11 +51,11 @@ All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`*
 | `UPLOAD_DIR` | where product images are stored (default `./uploads`; served via `/uploads/<file>`) |
 | `MAX_UPLOAD_BYTES` | max image size, default 2 MB |
 | `SESSION_COOKIE_SECURE` | optional; defaults to `true` in production, `false` in dev |
-| `RESEND_API_KEY` | server-side Resend API credential for future email delivery |
-| `RESEND_FROM_EMAIL` | approved sender address for future email delivery |
-| `APP_URL` | public application origin used to construct future password-reset links |
+| `RESEND_API_KEY` | server-side Resend API credential for password recovery email |
+| `RESEND_FROM_EMAIL` | approved sender address for password recovery email |
+| `APP_URL` | public application origin used to construct password-reset links |
 
-Password recovery email configuration is reserved for a future feature and is not required by the application yet. For local development, use `http://localhost:3000` as `APP_URL`. Production deployments must use the actual HTTPS application origin. Configure real Resend credentials in the local `.env` file and in the deployment platform's environment settings; never commit them to Git. These variables are intentionally server-side and must not be renamed with a `NEXT_PUBLIC_` prefix.
+Password recovery uses Resend. For local development, use `http://localhost:3000` as `APP_URL`. Production deployments must use the actual HTTPS application origin. Configure real Resend credentials in the local `.env` file and in the deployment platform's environment settings; never commit them to Git. These variables are intentionally server-side and must not be renamed with a `NEXT_PUBLIC_` prefix. If these variables are missing or invalid, password recovery returns a safe temporary-unavailable error; normal startup and login continue to work.
 
 ### Scripts
 
@@ -129,7 +129,9 @@ API: `GET /api/inventory` (overview + summary), `GET/POST /api/inventory/movemen
 
 API (Zod-validated; errors are `{ error, fieldErrors?, code? }`): `GET /api/users?q=&role=ADMIN|MANAGER|CASHIER&status=active|inactive|all`, `POST /api/users { name, email, role, password }`, `GET /api/users/:id`, `PATCH /api/users/:id { name?, email?, role?, active? }`, `DELETE /api/users/:id` (= deactivate), `POST /api/users/:id/password { password }`.
 
-Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/me`, `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
+Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `GET /api/me`, `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
+
+Self-service password recovery is available from `/login/forgot-password`. Reset tokens are random, stored only as SHA-256 hashes, expire after 30 minutes, and are single-use. Recovery requests use database-backed per-email and per-IP limits so the protection works across serverless instances. A successful recovery increments `User.sessionVersion`, invalidating existing sessions without changing the user's role or active status. Apply the password-recovery migration with `npm run db:deploy` before using the feature.
 
 ## Schema (`prisma/schema.prisma`)
 
@@ -165,4 +167,4 @@ lib/report-export.ts CSV + pdfkit PDF    components/charts  recharts wrappers
 - **Phase 4a (done):** inventory overview, stock actions, stock history, low-stock alerts.
 - **Phase 4b (done):** sales filters/totals, sale detail, refunds with restock.
 - **Phase 5 (done):** dashboard charts, reports with CSV/PDF export, demo-sales script.
-- **Phase 6 (done):** user management (add/edit/reset password/deactivate, last-admin protection, session invalidation).
+- **Phase 6 (done):** user management (add/edit/reset password/deactivate, last-admin protection, session invalidation) and self-service password recovery.

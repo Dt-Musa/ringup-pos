@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { safeNext } from "@/lib/safe-redirect";
 import { inputCls, btnPrimary } from "@/components/ui/modal";
+import Link from "next/link";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -98,6 +99,9 @@ export default function LoginForm() {
       <button type="submit" disabled={pending} className={`${btnPrimary} min-h-12 w-full bg-emerald-800 text-base hover:bg-emerald-900`}>
         {pending ? "Signing in…" : "Sign in"}
       </button>
+      <Link href="/login/forgot-password" className="block text-center text-sm font-semibold text-emerald-800 hover:text-emerald-950">
+        Forgot your password?
+      </Link>
     </form>
   );
 }
