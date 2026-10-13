@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatUGX } from "@/lib/format";
+import { Icon } from "@/components/ui/icon";
 import type { StockStatus } from "@/lib/inventory";
 import { StockBadge } from "./stock-badge";
 import { StockActionModal, type StockAction } from "./stock-action-modal";
@@ -21,7 +22,7 @@ export type InventoryRow = {
 
 export function InventoryTable({ items }: { items: InventoryRow[] }) {
   const [modal, setModal] = useState<{ action: StockAction; product: InventoryRow } | null>(null);
-  const btn = "inline-flex min-h-10 items-center rounded-lg border border-slate-400 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-500 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800";
+  const btn = "inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-400 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-500 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800";
   return (
     <>
       <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
@@ -62,16 +63,16 @@ export function InventoryTable({ items }: { items: InventoryRow[] }) {
                 <td data-label="Actions" className="whitespace-nowrap px-4 py-2 text-right">
                   <div className="inline-flex gap-1">
                     <button onClick={() => setModal({ action: "ADD", product: p })} className={`${btn} text-emerald-700`}>
-                      Add
+                      <Icon name="package-plus" /> Add
                     </button>
                     <button onClick={() => setModal({ action: "REDUCE", product: p })} className={`${btn} text-red-600`}>
-                      Reduce
+                      <Icon name="package-minus" /> Reduce
                     </button>
                     <button onClick={() => setModal({ action: "ADJUST", product: p })} className={btn}>
-                      Adjust
+                      <Icon name="sliders" /> Adjust
                     </button>
                     <Link href={`/inventory/history?productId=${p.id}`} className={btn}>
-                      History
+                      <Icon name="archive" /> History
                     </Link>
                   </div>
                 </td>

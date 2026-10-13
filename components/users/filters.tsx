@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { inputCls } from "@/components/ui/modal";
 import { ROLE_LABELS, ROLES } from "@/lib/permissions";
@@ -11,12 +11,13 @@ export function UserFilters() {
   const params = useSearchParams();
   const [q, setQ] = useState(params.get("q") ?? "");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pending, startTransition] = useTransition();
 
   function update(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
     if (value) next.set(key, value);
     else next.delete(key);
-    router.replace(`${pathname}?${next.toString()}`);
+    startTransition(() => router.replace(`${pathname}?${next.toString()}`));
   }
 
   // Debounced search-as-you-type
@@ -32,7 +33,7 @@ export function UserFilters() {
   const hasFilters = ["q", "role", "status"].some((k) => params.get(k));
 
   return (
-    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto]">
+    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto]" aria-busy={pending}>
       <input
         type="search"
         name="q"
@@ -66,6 +67,9 @@ export function UserFilters() {
           Clear
         </button>
       )}
+      <span role="status" aria-live="polite" className="text-xs text-zinc-500">
+        {pending ? "Updating…" : ""}
+      </span>
     </div>
   );
 }

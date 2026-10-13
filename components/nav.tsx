@@ -29,13 +29,13 @@ export function Sidebar({ items, userName, role }: { items: NavItem[]; userName:
           aria-controls="primary-navigation"
           aria-label="Toggle navigation"
           onClick={() => setOpen((value) => !value)}
-          className="rounded-lg p-2 text-zinc-400 hover:bg-white/10 hover:text-white lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/10 hover:text-white lg:hidden"
         >
           <span className="text-xl leading-none">{open ? "×" : "☰"}</span>
         </button>
       </div>
       <div id="primary-navigation" className={`${open ? "block" : "hidden"} absolute left-0 right-0 border-b border-white/10 bg-zinc-950 px-3 pb-3 shadow-xl lg:static lg:block lg:border-0 lg:px-3 lg:pb-0 lg:shadow-none`}>
-      <nav className="space-y-1">
+      <nav className="space-y-1" aria-label="Primary navigation">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
@@ -43,7 +43,8 @@ export function Sidebar({ items, userName, role }: { items: NavItem[]; userName:
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${active ? "bg-emerald-600 text-white shadow-sm" : "text-zinc-400 hover:bg-white/10 hover:text-white"}`}
+              aria-current={active ? "page" : undefined}
+              className={`flex min-h-11 items-center rounded-lg px-3 py-2.5 text-sm font-medium ${active ? "bg-emerald-600 text-white shadow-sm" : "text-zinc-400 hover:bg-white/10 hover:text-white"}`}
             >
               {item.label}
             </Link>
@@ -53,7 +54,7 @@ export function Sidebar({ items, userName, role }: { items: NavItem[]; userName:
         <div className="mt-6 border-t border-white/10 p-4 pb-6 text-sm lg:mt-8">
         <div className="font-medium">{userName}</div>
           <div className="mt-0.5 text-xs uppercase tracking-wide text-zinc-500">{role}</div>
-          <button onClick={logout} className="mt-4 min-h-10 w-full rounded-lg bg-white/10 px-3 py-2 text-left text-zinc-300 hover:bg-white/15 hover:text-white">
+          <button onClick={logout} className="mt-4 min-h-11 w-full rounded-lg bg-white/10 px-3 py-2 text-left text-zinc-300 hover:bg-white/15 hover:text-white">
           Sign out
         </button>
       </div>

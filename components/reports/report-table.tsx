@@ -18,7 +18,8 @@ export function ReportSummary({ report }: { report: ReportData }) {
 export function ReportTable({ report }: { report: ReportData }) {
   const { columns, rows, totals } = report;
   return (
-    <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="overflow-x-auto" tabIndex={0} aria-label="Scrollable report table">
       <table className="w-full text-sm" data-testid="report-table">
         <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-800/50">
           <tr>
@@ -64,6 +65,7 @@ export function ReportTable({ report }: { report: ReportData }) {
           Showing the latest {rows.length.toLocaleString("en-US")} of {report.totalRows.toLocaleString("en-US")} sales. Export CSV for the full list; totals cover all of them.
         </p>
       )}
+      </div>
     </div>
   );
 }

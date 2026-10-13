@@ -99,13 +99,13 @@ export function InventoryFilters({ categories }: { categories: { id: string; nam
             href={hrefFor({ status: v === "all" ? "" : v })}
             replace
             aria-current={status === v ? "true" : undefined}
-            className={`min-h-10 px-3 py-2 text-center ${status === v ? "bg-emerald-600 text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
+            className={`flex min-h-11 items-center justify-center px-3 py-2 text-center ${status === v ? "bg-emerald-600 text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
           >
             {label}
           </Link>
         ))}
       </div>
-      <button type="submit" className="min-h-10 rounded-lg border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800">
+      <button type="submit" className="min-h-11 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800">
         Apply
       </button>
       {hasFilters && (

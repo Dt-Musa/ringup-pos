@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { useRouter } from "next/navigation";
 import { Receipt, toReceiptSale, type ReceiptSale } from "@/components/receipt";
 import { Modal } from "@/components/ui/modal";
+import { Icon } from "@/components/ui/icon";
 import { formatUGX, PAYMENT_LABELS } from "@/lib/format";
 import type { PosCategory, PosProduct } from "./types";
 
@@ -201,7 +202,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const inCart = (id: string) => cart.find((c) => c.productId === id)?.qty ?? 0;
 
   return (
-    <div className="grid min-w-0 gap-5 pb-16 md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
+    <div className="grid min-w-0 gap-5 pb-[calc(5rem+env(safe-area-inset-bottom))] md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
       {/* ---------- catalogue ---------- */}
       <section className="min-w-0">
         <input
@@ -214,7 +215,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
           onKeyDown={onSearchKey}
           placeholder="Search by name or scan / type SKU, then Enter…"
           aria-label="Search products"
-          className="w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+          className="min-h-12 w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
         />
         <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Categories">
           {[{ id: "", name: "All" }, ...categories].map((c) => (
@@ -235,8 +236,21 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
         </div>
 
         {filtered.length === 0 ? (
-          <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">
-            No products match &ldquo;{query}&rdquo;.
+          <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
+            <p>No products match &ldquo;{query}&rdquo;.</p>
+            {(query || categoryId) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setCategoryId("");
+                  searchRef.current?.focus();
+                }}
+                className="mt-3 min-h-11 rounded-lg border border-zinc-300 px-4 py-2 font-medium text-emerald-800 hover:bg-emerald-50 dark:border-zinc-700 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+              >
+                Clear search and category
+              </button>
+            )}
           </div>
         ) : (
           <div className="mt-4 min-w-0 grid auto-rows-fr grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
@@ -251,11 +265,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   disabled={out}
                   onClick={() => add(p)}
                   data-sku={p.sku}
-                  className={`relative flex h-full min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 text-left shadow-md shadow-zinc-200/60 transition max-sm:p-2 dark:border-zinc-800 dark:bg-zinc-900 ${
+                  className={`relative flex h-full min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm shadow-zinc-200/60 transition max-sm:p-2 dark:border-zinc-800 dark:bg-zinc-900 ${
                     out ? "cursor-not-allowed opacity-50" : "hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-900/10 hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
-                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-20 max-sm:text-lg dark:bg-zinc-800">
+                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-16 max-sm:text-lg dark:bg-zinc-800">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.image} alt="" className="h-full w-full p-1 object-contain" />
@@ -263,10 +277,10 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                       p.name.slice(0, 1).toUpperCase()
                     )}
                   </div>
-                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-medium max-sm:min-h-[2rem] max-sm:text-xs">{p.name}</div>
-                  <div className="mt-1 text-sm font-semibold text-emerald-700 max-sm:mt-0.5 max-sm:text-xs dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 max-sm:mt-0.5 max-sm:text-[10px]">
-                    <span className="font-mono">{p.sku}</span>
+                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold max-sm:min-h-[2rem] max-sm:text-xs">{p.name}</div>
+                  <div className="mt-1 text-sm font-bold text-emerald-700 max-sm:mt-0.5 max-sm:text-xs dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
+                  <div className="mt-1 flex items-center justify-between gap-1 text-xs text-zinc-500 max-sm:mt-0.5 max-sm:text-[10px]">
+                    <span className="truncate font-mono">{p.sku}</span>
                     <span className={out ? "font-semibold text-red-600" : low ? "font-semibold text-amber-600" : ""}>
                       {out ? "Out of stock" : `${p.stockQty} left`}
                     </span>
@@ -287,7 +301,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
       <aside
         className={`${
           mobileCartOpen
-            ? "fixed inset-x-0 bottom-0 z-[60] max-h-[85vh] overflow-y-auto rounded-t-2xl px-4 pb-[env(safe-area-inset-bottom)]"
+            ? "fixed inset-x-0 bottom-0 z-[60] max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-t-2xl px-4 pb-[env(safe-area-inset-bottom)]"
             : "hidden"
         } lg:sticky lg:top-4 lg:block lg:self-start lg:overflow-visible lg:rounded-none lg:px-0`}
       >
@@ -297,11 +311,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             <div className="flex items-center gap-3">
               {cart.length > 0 && (
                 <button onClick={clearCart} className="text-sm text-red-600 hover:underline">
-                  Clear
+                  <span className="inline-flex items-center gap-1"><Icon name="x" /> Clear</span>
                 </button>
               )}
               <button type="button" onClick={() => setMobileCartOpen(false)} aria-label="Close cart" className="text-xl leading-none text-zinc-400 hover:text-zinc-700 lg:hidden">
-                ×
+                <Icon name="x" />
               </button>
             </div>
           </div>
@@ -316,7 +330,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                     <div className="flex items-start justify-between gap-2">
                       <div className="font-medium">{l.product?.name ?? "Unavailable item"}</div>
                       <button onClick={() => remove(l.productId)} aria-label={`Remove ${l.product?.name ?? "item"}`} className="text-zinc-400 hover:text-red-600">
-                        ✕
+                        <Icon name="x" />
                       </button>
                     </div>
                     <div className="mt-1 flex items-center justify-between">
@@ -327,7 +341,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                           aria-label="Decrease quantity"
                           className="h-8 w-8 shrink-0 rounded-l-md border border-zinc-300 hover:bg-zinc-100 max-lg:h-10 max-lg:w-10 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         >
-                          −
+                          <Icon name="minus" />
                         </button>
                         <input
                           type="number"
@@ -344,7 +358,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                           aria-label="Increase quantity"
                           className="h-8 w-8 shrink-0 rounded-r-md border border-zinc-300 hover:bg-zinc-100 max-lg:h-10 max-lg:w-10 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         >
-                          +
+                          <Icon name="plus" />
                         </button>
                         <span className="ml-3 text-xs text-zinc-500">× {formatUGX(l.product?.sellingPrice ?? 0)}</span>
                       </div>
@@ -419,7 +433,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                     role="radio"
                     aria-checked={method === m}
                     onClick={() => setMethod(m)}
-                    className={`rounded-md border px-2 py-2 text-sm ${
+                    className={`min-h-11 rounded-md border px-2 py-2 text-sm ${
                       method === m
                         ? "border-emerald-600 bg-emerald-50 font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                         : "border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
