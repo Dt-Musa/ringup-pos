@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { btnPrimary } from "@/components/ui/modal";
+import { Icon } from "@/components/ui/icon";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { ResetPasswordModal } from "./reset-password-modal";
 import { RoleBadge } from "./role-badge";
@@ -12,7 +13,7 @@ import type { UserRow } from "./types";
 
 type ModalState = null | { kind: "form"; user?: UserRow } | { kind: "password"; user: UserRow } | { kind: "toggle"; user: UserRow };
 
-const actionCls = "inline-flex min-h-10 items-center rounded-md px-1 text-sm font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950 hover:decoration-emerald-700";
+const actionCls = "inline-flex min-h-10 items-center gap-1 rounded-md px-1 text-sm font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950 hover:decoration-emerald-700";
 
 export function UsersManager({ users, currentUserId }: { users: UserRow[]; currentUserId: string }) {
   const router = useRouter();
@@ -46,7 +47,7 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
     <>
       <div className="mb-4 flex flex-wrap justify-end gap-2">
         <button onClick={() => setModal({ kind: "form" })} className={btnPrimary}>
-          + Add user
+          <Icon name="user-plus" /> Add user
         </button>
       </div>
 
@@ -104,7 +105,8 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
                     <RoleBadge role={u.role} />
                   </td>
                   <td data-label="Status" className="px-3 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${u.active ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${u.active ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"}`}>
+                      <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${u.active ? "bg-emerald-600" : "bg-zinc-500"}`} />
                       {u.active ? "Active" : "Inactive"}
                     </span>
                   </td>
@@ -113,7 +115,7 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
                   <td data-label="Actions" className="whitespace-nowrap px-3 py-2 text-right">
                     <div className="inline-flex items-center gap-3">
                       <button onClick={() => setModal({ kind: "form", user: u })} className={actionCls} aria-label={`Edit ${u.name}`}>
-                        Edit
+                        <Icon name="edit" /> Edit
                       </button>
                       <button
                         onClick={() => setModal({ kind: "password", user: u })}
@@ -121,14 +123,14 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
                         title="Reset password"
                         aria-label={`Reset password for ${u.name}`}
                       >
-                        Password
+                        <Icon name="key" /> Password
                       </button>
                       <button
                         onClick={() => openToggle(u)}
                         disabled={isSelf}
                         title={isSelf ? "You can't deactivate your own account" : undefined}
                         aria-label={`${u.active ? "Deactivate" : "Reactivate"} ${u.name}`}
-                        className={`${u.active ? "text-red-700" : "text-emerald-800"} inline-flex min-h-10 items-center rounded-md px-1 text-sm font-semibold underline decoration-current/30 underline-offset-2 hover:decoration-current disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40`}
+                        className={`${u.active ? "text-red-700" : "text-emerald-800"} inline-flex min-h-11 items-center rounded-md px-1 text-sm font-semibold underline decoration-current/30 underline-offset-2 hover:decoration-current disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40`}
                       >
                         {u.active ? "Deactivate" : "Reactivate"}
                       </button>

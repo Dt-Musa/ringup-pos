@@ -7,5 +7,10 @@ const STYLES: Record<string, string> = {
 const LABELS: Record<string, string> = { COMPLETED: "Completed", PARTIALLY_REFUNDED: "Partially refunded", REFUNDED: "Refunded", VOIDED: "Voided" };
 
 export function SaleStatusBadge({ status }: { status: string }) {
-  return <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${STYLES[status] ?? ""}`}>{LABELS[status] ?? status}</span>;
+  return (
+    <span className={`inline-flex min-h-7 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${STYLES[status] ?? ""}`}>
+      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+      {LABELS[status] ?? status}
+    </span>
+  );
 }

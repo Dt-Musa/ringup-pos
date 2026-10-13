@@ -30,12 +30,12 @@ const tooltipStyle = { fontSize: 12, borderRadius: 6, border: "1px solid #e4e4e7
 export function TrendBarChart({ data, valueFormat = "money", height = 260, emptyText = "No sales in this period" }: { data: ChartDatum[]; valueFormat?: ValueFormat; height?: number; emptyText?: string }) {
   if (!data.length || data.every((d) => d.value === 0)) return <Empty height={height} text={emptyText} />;
   return (
-    <div style={{ height }} role="img" aria-label="Bar chart">
+    <div style={{ height }} role="img" aria-label={`Bar chart showing ${valueFormat === "money" ? "net sales" : "units"} over time`}>
       <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 600, height }}>
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} interval="preserveStartEnd" minTickGap={16} tickLine={false} />
-          <YAxis tickFormatter={compact} tick={{ fontSize: 11 }} width={44} tickLine={false} axisLine={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#475569" }} interval="preserveStartEnd" minTickGap={16} tickLine={false} />
+          <YAxis tickFormatter={compact} tick={{ fontSize: 12, fill: "#475569" }} width={52} tickLine={false} axisLine={false} />
           <Tooltip
             formatter={(v) => [fmt(valueFormat)(Number(v)), valueFormat === "money" ? "Net sales" : "Units"]}
             labelFormatter={(l, p) => {
@@ -57,12 +57,12 @@ export function RankBarChart({ data, valueFormat = "int", height, emptyText = "N
   const h = height ?? Math.max(160, data.length * 34 + 24);
   if (!data.length) return <Empty height={height ?? 200} text={emptyText} />;
   return (
-    <div style={{ height: h }} role="img" aria-label="Ranking chart">
+    <div style={{ height: h }} role="img" aria-label={`Ranking chart showing top products by ${valueFormat === "money" ? "net sales" : "units sold"}`}>
       <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 500, height: h }}>
         <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e4e4e7" />
-          <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11 }} tickLine={false} allowDecimals={false} />
-          <YAxis type="category" dataKey="label" width={140} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+          <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 12, fill: "#475569" }} tickLine={false} allowDecimals={false} />
+          <YAxis type="category" dataKey="label" width={150} tick={{ fontSize: 12, fill: "#475569" }} tickLine={false} axisLine={false} />
           <Tooltip
             formatter={(v) => [fmt(valueFormat)(Number(v)), valueFormat === "money" ? "Net sales" : "Units sold"]}
             labelFormatter={(l, p) => {
@@ -85,7 +85,7 @@ export function DonutChart({ data, valueFormat = "money", height = 260, emptyTex
   if (!shown.length) return <Empty height={height} text={emptyText} />;
   const total = shown.reduce((a, d) => a + d.value, 0);
   return (
-    <div style={{ height }} role="img" aria-label="Donut chart">
+    <div style={{ height }} role="img" aria-label={`Donut chart showing ${valueFormat === "money" ? "sales value" : "units"} by category`}>
       <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 400, height }}>
         <PieChart>
           <Pie data={shown} dataKey="value" nameKey="label" innerRadius="55%" outerRadius="80%" paddingAngle={2} isAnimationActive={false}>

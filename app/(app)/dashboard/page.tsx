@@ -10,12 +10,12 @@ import { getInventorySummary, listAlerts, stockStatus } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
-function Card({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
+function Card({ label, value, sub, tone, className = "" }: { label: string; value: string; sub?: string; tone?: string; className?: string }) {
   return (
-    <div className="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm shadow-zinc-200/40 transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</div>
-      <div className={`mt-2 text-2xl font-bold tracking-tight ${tone ?? ""}`}>{value}</div>
-      {sub && <div className="mt-1 text-xs text-zinc-500">{sub}</div>}
+    <div className={`rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm shadow-zinc-200/40 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5 dark:border-zinc-800 dark:bg-zinc-900 ${className}`}>
+      <div className="min-h-8 text-xs font-semibold uppercase leading-4 tracking-wide text-zinc-600 sm:min-h-0 sm:text-sm">{label}</div>
+      <div className={`mt-1 text-xl font-bold tracking-tight sm:mt-2 sm:text-2xl ${tone ?? ""}`}>{value}</div>
+      {sub && <div className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500 sm:text-xs">{sub}</div>}
     </div>
   );
 }
@@ -75,7 +75,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4" data-testid="dashboard-cards">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="dashboard-cards">
         <Card label={my("Net sales today")} value={formatUGX(dayFin.revenue)} sub={dayFin.refunds ? `${formatUGX(dayFin.refunds)} refunded` : undefined} />
         <Card label={my("Net sales this week")} value={formatUGX(weekFin.revenue)} sub={`${sales(weekFin.salesCount)} since Monday`} />
         <Card label={my("Net sales this month")} value={formatUGX(monthFin.revenue)} sub={sales(monthFin.salesCount)} />
@@ -94,11 +94,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           value={formatNumber(lowTotal)}
           sub={`${inv.lowStock} low · ${inv.outOfStock} out`}
           tone={inv.outOfStock ? "text-red-600" : inv.lowStock ? "text-amber-600" : ""}
+          className="col-span-2 lg:col-span-2"
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6">
-        <div>
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="lg:col-span-2">
           <Panel title={my("Daily net sales")} subtitle={`Last 30 days (${formatRange(last30)}), after refunds`}>
             <TrendBarChart data={dailyData} />
           </Panel>
@@ -106,7 +107,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Panel title="Sales by payment method" subtitle="Net sales, last 30 days">
           <DonutChart data={methodData} />
         </Panel>
-        <div>
+        <div className="lg:col-span-1">
           <Panel title="Top 5 best-selling products" subtitle="Units sold (net of returns), last 30 days">
             <RankBarChart data={topData} />
           </Panel>
