@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
@@ -18,7 +19,7 @@ type SessionCheck = { user: CurrentUser; stale: false } | { user: null; stale: b
  * their sessionVersion moved on (password reset, role change, deactivation – see lib/users.ts). Cookies
  * issued before sessionVersion existed carry none and are treated as stale (one forced re-login).
  */
-export async function checkSession(): Promise<SessionCheck> {
+export const checkSession = cache(async function checkSession(): Promise<SessionCheck> {
   let session: SessionData;
   try {
     session = { ...(await getSession()) };
@@ -35,7 +36,7 @@ export async function checkSession(): Promise<SessionCheck> {
     return { user: null, stale: true };
   }
   return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, stale: false };
-}
+});
 
 /** Loads the signed-in user from the DB (so deletion / deactivation / role changes / password resets take effect immediately). */
 export async function getCurrentUser(): Promise<CurrentUser | null> {

@@ -64,7 +64,7 @@ export function ResetPasswordModal({ user, isSelf, onClose }: { user: UserRow; i
 
   return (
     <Modal title={`Reset password – ${user.name}`} onClose={onClose}>
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <form onSubmit={onSubmit} className="space-y-4" noValidate aria-busy={saving}>
         <p className="text-sm text-zinc-500">
           {isSelf ? "Set a new password for your account." : `Set a new password for ${user.email}. They will be signed out of all devices.`}
         </p>
@@ -86,6 +86,7 @@ export function ResetPasswordModal({ user, isSelf, onClose }: { user: UserRow; i
           <button type="submit" disabled={saving} className={btnPrimary}>
             {saving ? "Saving…" : "Reset password"}
           </button>
+          {saving && <span role="status" aria-live="polite" className="sr-only">Resetting password…</span>}
         </div>
       </form>
     </Modal>

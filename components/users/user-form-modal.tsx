@@ -50,7 +50,7 @@ export function UserFormModal({ user, isSelf, onClose }: { user?: UserRow; isSel
 
   return (
     <Modal title={editing ? `Edit ${user.name}` : "Add user"} onClose={onClose}>
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <form onSubmit={onSubmit} className="space-y-4" noValidate aria-busy={saving}>
         {error && (
           <div role="alert" className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             {error}
@@ -105,6 +105,7 @@ export function UserFormModal({ user, isSelf, onClose }: { user?: UserRow; isSel
           <button type="submit" disabled={saving} className={btnPrimary}>
             {saving ? "Saving…" : editing ? "Save changes" : "Add user"}
           </button>
+          {saving && <span role="status" aria-live="polite" className="sr-only">Saving user…</span>}
         </div>
       </form>
     </Modal>
