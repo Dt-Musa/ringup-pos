@@ -25,12 +25,96 @@ function CartIcon() {
   );
 }
 
+const CART_STORAGE_KEY = "ringup:pos-cart";
+const EMPTY_CART: { productId: string; qty: number }[] = [];
+
+let memoryCart: { productId: string; qty: number }[] | null = null;
+const cartListeners = new Set<() => void>();
+
+function parseStoredCart(raw: string | null): { productId: string; qty: number }[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const qtyMap = new Map<string, number>();
+    for (const item of parsed) {
+      if (
+        item &&
+        typeof item === "object" &&
+        typeof item.productId === "string" &&
+        item.productId.trim().length > 0 &&
+        typeof item.qty === "number" &&
+        Number.isInteger(item.qty) &&
+        item.qty > 0
+      ) {
+        qtyMap.set(item.productId, (qtyMap.get(item.productId) ?? 0) + item.qty);
+      }
+    }
+    return Array.from(qtyMap.entries()).map(([productId, qty]) => ({ productId, qty }));
+  } catch {
+    return [];
+  }
+}
+
+function getCartSnapshot(): { productId: string; qty: number }[] {
+  if (typeof window === "undefined") return EMPTY_CART;
+  if (memoryCart === null) {
+    try {
+      const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+      memoryCart = parseStoredCart(raw);
+    } catch {
+      memoryCart = [];
+    }
+  }
+  return memoryCart;
+}
+
+function subscribeCart(callback: () => void) {
+  cartListeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === CART_STORAGE_KEY) {
+      memoryCart = parseStoredCart(e.newValue);
+      callback();
+    }
+  };
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
+  return () => {
+    cartListeners.delete(callback);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage);
+    }
+  };
+}
+
+function updateCart(
+  action:
+    | { productId: string; qty: number }[]
+    | ((prev: { productId: string; qty: number }[]) => { productId: string; qty: number }[]),
+) {
+  const current = memoryCart ?? getCartSnapshot();
+  const next = typeof action === "function" ? action(current) : action;
+  memoryCart = next;
+  try {
+    if (next.length === 0) {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
+    }
+  } catch {
+    // Ignore storage quota or security errors
+  }
+  cartListeners.forEach((listener) => listener());
+}
+
 export function PosScreen({ products, categories }: { products: PosProduct[]; categories: PosCategory[] }) {
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [cart, setCart] = useState<{ productId: string; qty: number }[]>([]);
+  const cart = useSyncExternalStore(subscribeCart, getCartSnapshot, () => EMPTY_CART);
+  const setCart = updateCart;
   const [discountType, setDiscountType] = useState<"FIXED" | "PERCENT">("FIXED");
   const [discountValue, setDiscountValue] = useState("");
   const [method, setMethod] = useState<Method>("CASH");
@@ -134,6 +218,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
     setReference("");
     setMethod("CASH");
     setError(null);
+    try {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } catch {
+      // Ignore localStorage errors
+    }
   }
 
   function clearCart() {
@@ -167,6 +256,10 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
 
   async function complete() {
     if (!canComplete) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setError("Network error – the sale was not completed. Check your connection and try again.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     const body = {
