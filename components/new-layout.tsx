@@ -67,7 +67,7 @@ function NavLink({ item, collapsed = false, mobile = false, onNavigate }: { item
   );
 }
 
-function UserBlock({ userName, role, collapsed = false, onLogout }: { userName: string; role: Role; collapsed?: boolean; onLogout: () => void }) {
+function UserBlock({ userName, role, collapsed = false, loggingOut = false, onLogout }: { userName: string; role: Role; collapsed?: boolean; loggingOut?: boolean; onLogout: () => void }) {
   return (
     <div className={`border-t border-white/10 ${collapsed ? "px-2 py-4" : "p-4"}`}>
       {!collapsed && (
@@ -83,13 +83,14 @@ function UserBlock({ userName, role, collapsed = false, onLogout }: { userName: 
       <button
         type="button"
         onClick={onLogout}
+        disabled={loggingOut}
         title={collapsed ? "Log out" : undefined}
-        className={`flex min-h-11 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-zinc-400 hover:bg-white/10 hover:text-white ${
+        className={`flex min-h-11 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-zinc-400 hover:bg-white/10 hover:text-white disabled:cursor-wait disabled:opacity-60 ${
           collapsed ? "justify-center px-0" : "px-3"
         }`}
       >
         <Icon name="logout" />
-        {!collapsed && "Log out"}
+        {!collapsed && (loggingOut ? "Logging out…" : "Log out")}
       </button>
     </div>
   );
@@ -101,6 +102,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
   const [moreOpen, setMoreOpen] = useState(false);
   const [hasCartItems, setHasCartItems] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const dragStartY = useRef<number | null>(null);
   const visibleTabs = MOBILE_TABS.map((label) => items.find((item) => item.label === label)).filter((item): item is NavItem => Boolean(item));
   const moreItems = items.filter((item) => !MOBILE_TABS.includes(item.label));
@@ -115,12 +117,19 @@ export function NewLayout({ children, items, userName, role }: { children: React
   }, []);
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
-    router.refresh();
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (!response.ok) throw new Error("Logout request failed");
+      router.replace("/login");
+    } catch {
+      setLoggingOut(false);
+    }
   }
 
   function requestLogout() {
+    if (loggingOut) return;
     if (hasCartItems) setLogoutDialogOpen(true);
     else void logout();
   }
@@ -151,7 +160,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
         <nav className="flex-1 space-y-2 overflow-y-auto p-3" aria-label="Primary navigation">
           {items.map((item) => <NavLink key={item.href} item={item} />)}
         </nav>
-        <UserBlock userName={userName} role={role} onLogout={requestLogout} />
+        <UserBlock userName={userName} role={role} loggingOut={loggingOut} onLogout={requestLogout} />
       </aside>
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col bg-zinc-950 text-zinc-100 md:flex xl:hidden">
@@ -161,7 +170,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
         <nav className="flex-1 space-y-1 p-2" aria-label="Primary navigation">
           {items.map((item) => <NavLink key={item.href} item={item} collapsed />)}
         </nav>
-        <UserBlock userName={userName} role={role} collapsed onLogout={requestLogout} />
+        <UserBlock userName={userName} role={role} collapsed loggingOut={loggingOut} onLogout={requestLogout} />
       </aside>
 
       <div className="min-h-screen pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 md:pl-16 xl:pl-64">
@@ -216,9 +225,9 @@ export function NewLayout({ children, items, userName, role }: { children: React
             </div>
             <nav className="space-y-1">
               {moreItems.map((item) => <NavLink key={item.href} item={item} mobile onNavigate={() => setMoreOpen(false)} />)}
-              <button type="button" onClick={requestLogout} className="mt-2 flex min-h-[52px] w-full items-center gap-3 border-t border-zinc-200 pt-3 text-left text-sm font-semibold text-red-700 active:scale-[0.98] dark:border-zinc-800 dark:text-red-400">
+              <button type="button" onClick={requestLogout} disabled={loggingOut} className="mt-2 flex min-h-[52px] w-full items-center gap-3 border-t border-zinc-200 pt-3 text-left text-sm font-semibold text-red-700 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 dark:border-zinc-800 dark:text-red-400">
                 <Icon name="logout" />
-                Log out
+                {loggingOut ? "Logging out…" : "Log out"}
               </button>
             </nav>
           </section>
@@ -230,6 +239,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
           confirmLabel="Log out"
           cancelLabel="Stay"
           danger
+          busy={loggingOut}
           onConfirm={() => void logout()}
           onClose={() => setLogoutDialogOpen(false)}
         >
