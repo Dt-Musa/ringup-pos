@@ -25,6 +25,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const rows = result.products.map((p) => ({
     id: p.id,
     sku: p.sku,
+    barcode: p.barcode,
     name: p.name,
     image: productImagePath(p.name, p.image),
     categoryId: p.categoryId,

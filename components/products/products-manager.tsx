@@ -92,7 +92,10 @@ export function ProductsManager({ products, categories }: { products: ProductRow
                       <span className="font-semibold">{p.name}</span>
                     </div>
                   </td>
-                  <td data-label="SKU" className="px-4 py-2 font-mono text-xs">{p.sku}</td>
+                  <td data-label="SKU" className="px-4 py-2 font-mono text-xs">
+                    <div>{p.sku}</div>
+                    {p.barcode && <div className="text-[11px] text-zinc-400 dark:text-zinc-500">#{p.barcode}</div>}
+                  </td>
                   <td data-label="Category" className="px-4 py-2">{p.categoryName}</td>
                   <td data-label="Cost" className="px-4 py-2 text-right">{formatUGX(p.buyingCost)}</td>
                   <td data-label="Price" className="px-4 py-2 text-right font-semibold text-emerald-800">{formatUGX(p.sellingPrice)}</td>

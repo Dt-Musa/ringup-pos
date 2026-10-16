@@ -9,7 +9,7 @@ export default async function PosPage() {
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
       where: { active: true },
-      select: { id: true, sku: true, name: true, image: true, categoryId: true, sellingPrice: true, stockQty: true, minStock: true },
+      select: { id: true, sku: true, barcode: true, name: true, image: true, categoryId: true, sellingPrice: true, stockQty: true, minStock: true },
       orderBy: { name: "asc" },
     }),
     prisma.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),

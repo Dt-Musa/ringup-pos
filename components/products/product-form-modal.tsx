@@ -32,6 +32,7 @@ export function ProductFormModal({
   const editing = !!product;
   const [name, setName] = useState(product?.name ?? "");
   const [sku, setSku] = useState(product?.sku ?? "");
+  const [barcode, setBarcode] = useState(product?.barcode ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? "");
   const [buyingCost, setBuyingCost] = useState(String(product?.buyingCost ?? ""));
   const [sellingPrice, setSellingPrice] = useState(String(product?.sellingPrice ?? ""));
@@ -77,6 +78,7 @@ export function ProductFormModal({
     const body = {
       name,
       sku,
+      barcode: barcode.trim() === "" ? null : barcode.trim(),
       categoryId,
       buyingCost: num(buyingCost),
       sellingPrice: num(sellingPrice),
@@ -119,6 +121,9 @@ export function ProductFormModal({
           </Field>
           <Field label="SKU / code *" error={fieldErrors.sku} hint="Unique. Letters, numbers, . - _">
             <input name="sku" value={sku} onChange={(e) => setSku(e.target.value.toUpperCase())} className={`${inputCls} font-mono`} maxLength={32} required />
+          </Field>
+          <Field label="Barcode" error={fieldErrors.barcode} hint="Optional. Unique barcode (UPC/EAN/Code128)">
+            <input name="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value.trim())} className={`${inputCls} font-mono`} maxLength={48} placeholder="e.g. 6001001001" />
           </Field>
           <Field label="Category *" error={fieldErrors.categoryId}>
             <select name="categoryId" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputCls} required>
