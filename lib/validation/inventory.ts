@@ -66,3 +66,35 @@ export const listMovementsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(30),
 });
+
+const optionalText = (max: number) => z.string().trim().max(max).transform((value) => value || null).optional();
+
+export const supplierSchema = z.object({
+  name: z.string().trim().min(1, "Supplier name is required").max(100),
+  phone: optionalText(40),
+  email: z.union([z.string().trim().email("Enter a valid email address").max(254), z.literal("")]).optional().transform((value) => value || null),
+  address: optionalText(300),
+});
+
+export const purchaseOrderSchema = z.object({
+  supplierId: z.string().min(1, "Choose a supplier"),
+  notes: optionalText(500),
+  items: z.array(z.object({
+    productId: z.string().min(1),
+    qty: positiveInt("Quantity"),
+    unitCost: z.number().int().min(0).max(1_000_000_000),
+  })).min(1, "Add at least one product").max(100),
+});
+
+export const purchaseOrderActionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.enum(["ORDER", "CANCEL"]) }),
+  z.object({
+    action: z.literal("RECEIVE"),
+    invoiceNumber: z.string().trim().min(1, "Invoice number is required").max(100),
+    invoiceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid invoice date").refine((value) => {
+      const date = new Date(`${value}T00:00:00.000Z`);
+      return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+    }, "Enter a valid invoice date"),
+    invoiceAmount: z.number().int().min(0).max(2_000_000_000),
+  }),
+]);

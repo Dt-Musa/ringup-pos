@@ -36,6 +36,8 @@ export const API_RULES: ApiRule[] = [
   { prefix: "/api/users", roles: ADMIN }, // user management (list/create/edit/deactivate/reset password)
   { prefix: "/api/reports", roles: STAFF },
   { prefix: "/api/inventory", roles: STAFF },
+  { prefix: "/api/suppliers", roles: STAFF },
+  { prefix: "/api/purchases", roles: STAFF },
   { prefix: "/api/products", methods: ["POST", "PUT", "PATCH", "DELETE"], roles: STAFF },
   { prefix: "/api/products", roles: ALL },
   { prefix: "/api/uploads", roles: STAFF },
