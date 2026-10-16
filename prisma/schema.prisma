@@ -236,6 +236,9 @@ model PurchaseOrder {
   notes       String?
   createdAt   DateTime            @default(now())
   receivedAt  DateTime?
+  invoiceNumber String?
+  invoiceDate   DateTime?
+  invoiceAmount Int?
 
   supplier       Supplier            @relation(fields: [supplierId], references: [id])
   createdBy      User                @relation(fields: [createdById], references: [id])
