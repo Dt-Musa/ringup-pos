@@ -1,5 +1,6 @@
 import { SHOP_NAME } from "@/lib/config";
 import { formatDateTime, formatUGX, PAYMENT_LABELS } from "@/lib/format";
+import { BrandLogo } from "@/components/brand";
 
 export type ReceiptSale = {
   receiptNo: string;
@@ -23,7 +24,12 @@ export function Receipt({ sale }: { sale: ReceiptSale }) {
   return (
     <div className="print-area mx-auto w-full max-w-[340px] bg-white p-5 font-mono text-[13px] leading-5 text-black shadow-md" data-testid="receipt">
       <div className="text-center">
-        <div className="text-xl font-bold tracking-wide">{SHOP_NAME}</div>
+        <div className="mb-2 flex justify-center">
+          <BrandLogo width={150} />
+        </div>
+        {SHOP_NAME.trim().toLowerCase() !== "ringup" && (
+          <div className="text-xl font-bold tracking-wide">{SHOP_NAME}</div>
+        )}
         <div className="text-xs">Thank you for shopping with us</div>
       </div>
       <div className="my-3 border-t border-dashed border-black" />

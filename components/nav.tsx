@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { NavItem } from "@/lib/permissions";
+import { BrandMark } from "@/components/brand";
 
 export function Sidebar({ items, userName, role }: { items: NavItem[]; userName: string; role: string }) {
   const pathname = usePathname();
@@ -20,7 +21,7 @@ export function Sidebar({ items, userName, role }: { items: NavItem[]; userName:
     <aside className="relative z-20 w-full shrink-0 bg-zinc-950 text-zinc-100 lg:w-64">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-5 lg:block lg:border-0 lg:py-6">
         <Link href="/dashboard" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold shadow-lg shadow-emerald-950/30">R</span>
+          <BrandMark size={36} />
           <span className="text-lg font-bold tracking-tight">RingUp</span>
         </Link>
         <button

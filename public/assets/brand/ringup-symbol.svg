@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">RingUp symbol</title>
+  <desc id="desc">An emerald receipt with an ascending transaction line.</desc>
+  <g fill="none" stroke="#078653" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M25 17h31l13 13v43l-7-4-7 5-7-5-7 5-7-5-9 5z" stroke-width="5.5"/>
+    <path d="M56 18v13h13" stroke-width="4.5"/>
+    <path d="M34 58h7l7-8 7 4 9-12" stroke-width="4.5"/>
+    <path d="m57 42 7-1-1 8" stroke-width="3.5"/>
+    <path d="M34 38h10" stroke-width="3.5" opacity=".6"/>
+  </g>
+</svg>
