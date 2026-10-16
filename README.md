@@ -1,170 +1,149 @@
-# RingUp
+# RingUp POS
 
-RingUp is a web-based Point of Sale for a small shop (DVN Programming Challenge). Products & categories, POS checkout with receipts, inventory with stock history, sales & refunds, a dashboard with charts plus exportable (CSV/PDF) reports, and user management – with role-based access for Admin, Manager and Cashier.
+RingUp POS is a browser-based point-of-sale and store-management application for small retail businesses. It brings checkout, product and inventory management, sales records, refunds, reporting, and staff access into one system. It was developed for the DVN Digital Skills Challenge 1.
 
-**Stack:** Next.js 16 (App Router, TypeScript, Tailwind v4) · PostgreSQL · Prisma 6 · iron-session (encrypted cookie sessions) · bcryptjs password hashing · Zod. Currency: **UGX** (stored as whole integers).
+The application uses Ugandan shillings (UGX), stored as whole-number amounts.
 
-## Quick start
+## What it does
 
-Requirements: Node 20+, PostgreSQL 15+ (Docker or a local install).
+- **Point of sale:** find products by name, SKU, or barcode; scan supported barcodes; manage a cart; apply discounts; record cash, mobile money, card, or bank-transfer payments; and produce printable receipts. The cart is saved in the browser so it can be restored after a page refresh. Completing a sale requires a connection to the application and database.
+- **Products and inventory:** manage products, categories, prices, costs, barcodes, and product images; record stock additions, reductions, and adjustments; review stock history; and see low-stock alerts.
+- **Suppliers and purchasing:** maintain supplier records, create and track purchase orders, receive ordered items into stock, and record supplier invoice details.
+- **Sales and refunds:** review sales and receipt details, process full or item-level refunds, and choose whether returned items go back into stock.
+- **Dashboard and reports:** view sales and stock summaries, charts, profit information for permitted roles, and reports that can be exported as CSV or PDF.
+- **Staff and access:** create and manage staff accounts, assign roles, deactivate or reactivate accounts, and reset passwords. Staff can request a password-reset link by email when Resend is configured.
 
-```bash
-git clone <repo> && cd pos
-npm install                 # also runs `prisma generate`
-cp .env.example .env        # then set SESSION_SECRET (openssl rand -base64 32)
+## Roles
 
-# 1. Start PostgreSQL – pick ONE:
-docker compose up -d db     # option A: Docker (user/pass/db = pos/pos/pos)
-#   option B: local Postgres, e.g. on Debian/Ubuntu:
-#   sudo apt install postgresql
-#   sudo -u postgres psql -c "CREATE USER pos WITH PASSWORD 'pos' CREATEDB;" -c "CREATE DATABASE pos OWNER pos;"
+| Role | Access |
+| --- | --- |
+| **Admin** | All areas, including staff management and reports |
+| **Manager** | POS, products, inventory, suppliers and purchases, sales, refunds, and reports |
+| **Cashier** | POS, dashboard, and their own sales and receipts |
 
-# 2. Create tables + demo data
-npm run db:deploy           # applies migrations (use `npm run db:migrate` while changing the schema)
-npm run db:seed
+Configured account emails:
 
-# 3. Run
-npm run dev                 # http://localhost:3000 (runs `prisma generate` first)
+- **Admin:** `irankundamusa17@gmail.com`
+- **Manager:** `oxbtytes17@gmail.com`
+- **Cashier:** `oxcurious12@gmail.com`
+
+Access is checked on the server as well as in the interface. Deactivating an account, changing its role, or resetting its password invalidates existing sessions.
+
+## Technology
+
+- Next.js App Router and TypeScript
+- PostgreSQL with Prisma ORM
+- Tailwind CSS
+- Encrypted cookie sessions and bcrypt password hashing
+- Zod request validation
+- Recharts for dashboard charts and PDFKit for PDF report exports
+- Resend for password-reset email delivery
+
+## Run locally
+
+### Requirements
+
+- Node.js 20.9 or newer and npm
+- PostgreSQL, either a local instance, Docker, or a Neon development/test branch
+
+Use a **development or test database** for local work. A local app pointed at the production database can change live products, stock, sales, and staff data. Neon branches provide separate connection strings; keep Vercel pointed at the production branch and local development pointed at a test branch.
+
+### Setup
+
+1. Clone the repository and install dependencies:
+
+   ```sh
+   git clone https://github.com/Dt-Musa/ringup-pos.git
+   cd ringup-pos
+   npm install
+   ```
+
+2. Copy `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell, or `cp .env.example .env` in macOS/Linux).
+
+3. Set `DATABASE_URL` to the connection string for your local PostgreSQL database or Neon development/test branch. Set a unique `SESSION_SECRET` of at least 32 characters. For local password-reset links, set `APP_URL` to `http://localhost:3000`.
+
+   To generate a session secret with Node.js:
+
+   ```sh
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
+
+4. Apply the checked-in migrations to the database selected by `DATABASE_URL`:
+
+   ```sh
+   npm run db:deploy
+   ```
+
+5. Start the development server:
+
+   ```sh
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000).
+
+The development server and production build generate the Prisma client automatically. After switching database branches or applying migrations, restart the server. If the app reports that a database column is missing, confirm `DATABASE_URL` points to the intended development/test database and that its migrations have been applied.
+
+### Optional development data
+
+`npm run db:seed` adds sample users, categories, products, opening stock, and a supplier. It is intended for a disposable local or test database. The script skips existing demo users without changing their account fields, but it can update seeded categories and product details. It refuses to run when `NODE_ENV` is `production`; do not try to bypass that guard or run the seed against real store data. The seed command prints its demo password in the terminal, so treat its output as sensitive.
+
+`npm run db:demo` can create sample sales for exercising reports and refund workflows. Use it only in a disposable development/test database. `npm run db:reset` is destructive and should never be used against a database containing data you need to keep.
+
+## Environment configuration
+
+Copy `.env.example` to `.env` and keep `.env` out of Git. Set secrets only in local environment files or your hosting provider’s secret settings; never add real credentials to this README or commit them.
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string for the intended environment |
+| `SESSION_SECRET` | Secret used to encrypt session cookies; at least 32 characters |
+| `SEED_PASSWORD` | Optional password used for newly created sample accounts; development/test only |
+| `UPLOAD_DIR` | Local directory for product images; defaults to `./uploads` |
+| `MAX_UPLOAD_BYTES` | Maximum product-image upload size; defaults to 2 MiB |
+| `RESEND_API_KEY` | Server-side Resend credential for password recovery |
+| `RESEND_FROM_EMAIL` | Verified sender address for recovery emails |
+| `APP_URL` | Application origin used to create password-reset links; use the HTTPS production URL in production |
+| `SESSION_COOKIE_SECURE` | Optional secure-cookie override; production defaults to secure cookies |
+
+Password recovery needs valid Resend credentials and the correct `APP_URL`. Without them, login and other application features continue to work, but recovery email is unavailable. Product images are stored on the application filesystem; use persistent storage or an object-storage service if the hosting filesystem is ephemeral.
+
+## Database changes
+
+Prisma models are in `prisma/schema.prisma`; committed SQL migrations are in `prisma/migrations/`.
+
+- Use `npm run db:migrate` while developing a schema change against a development database. It creates and applies a migration.
+- Use `npm run db:deploy` to apply committed migrations to the database in `DATABASE_URL`.
+- Confirm the target database before running either command. Never point local experiments at production.
+- Production migrations are not run by `npm run build`; plan and apply them deliberately before deploying code that requires the changed schema.
+
+## Common commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the local development server |
+| `npm run lint` | Run ESLint |
+| `npm run build` | Generate the Prisma client and build the production application |
+| `npm start` | Start the built application |
+| `npm run db:deploy` | Apply committed Prisma migrations to `DATABASE_URL` |
+| `npm run db:migrate` | Create/apply a development migration |
+| `npm run db:seed` | Add sample data to a development/test database |
+| `npm run db:demo` | Generate sample sales in a development/test database |
+| `npm run db:studio` | Open Prisma Studio for the configured database |
+
+## Deployment notes
+
+The app can be deployed to Vercel or another Node.js host. Configure the production environment variables in the hosting provider, with `DATABASE_URL` pointing to the production database and `APP_URL` set to the public HTTPS origin. Keep local and production credentials separate. Apply required committed migrations to the intended production database as a deliberate release step; builds do not apply them automatically.
+
+If the host uses ephemeral storage, uploaded product images need persistent or object storage. Password-reset email also requires a verified Resend sender and production `APP_URL`.
+
+## Project structure
+
+```text
+app/                    Pages, layouts, and API route handlers
+components/             POS, inventory, sales, reporting, and shared UI
+lib/                    Authentication, permissions, business logic, and validation
+prisma/schema.prisma    Database models
+prisma/migrations/      Versioned database migrations
+prisma/seed.ts          Optional development/test sample data
 ```
-
-> **After any change to `prisma/schema.prisma` or a `git pull` with new migrations:** run `npm run db:migrate` (dev) or `npm run db:deploy` (prod), then **restart the dev/prod server**. A running server keeps the old generated Prisma client in memory and fails with errors like `Unknown field … for select statement`. `npm run dev` and `npm run build` regenerate the client automatically (`predev` / `prebuild`, plus `postinstall`), and `GET /api/health` reports `schema: "mismatch"` when the client or DB is out of date.
-
-Production build: `npm run build && npm start` (set `SESSION_COOKIE_SECURE=false` if you serve it over plain HTTP outside localhost).
-
-### Demo accounts
-
-All demo users share the password set by `SEED_PASSWORD` (default **`Pos@12345`**). Change it for any real deployment. Expected to change 
-
-| Email | Role | Can open |
-|-------|------|----------|
-| admin@pos.test | ADMIN | everything incl. Users |
-| manager@pos.test | MANAGER | Dashboard, POS, Products, Inventory, Sales, Reports |
-| cashier@pos.test | CASHIER | Dashboard, POS, Sales (own sales only) |
-
-### Environment variables (`.env.example`)
-
-| Var | Purpose |
-|-----|---------|
-| `DATABASE_URL` | Postgres connection string |
-| `SESSION_SECRET` | ≥32 chars, encrypts the session cookie |
-| `SEED_PASSWORD` | password given to demo users by the seed |
-| `UPLOAD_DIR` | where product images are stored (default `./uploads`; served via `/uploads/<file>`) |
-| `MAX_UPLOAD_BYTES` | max image size, default 2 MB |
-| `SESSION_COOKIE_SECURE` | optional; defaults to `true` in production, `false` in dev |
-| `RESEND_API_KEY` | server-side Resend API credential for password recovery email |
-| `RESEND_FROM_EMAIL` | approved sender address for password recovery email |
-| `APP_URL` | public application origin used to construct password-reset links |
-
-Password recovery uses Resend. For local development, use `http://localhost:3000` as `APP_URL`. Production deployments must use the actual HTTPS application origin. Configure real Resend credentials in the local `.env` file and in the deployment platform's environment settings; never commit them to Git. These variables are intentionally server-side and must not be renamed with a `NEXT_PUBLIC_` prefix. If these variables are missing or invalid, password recovery returns a safe temporary-unavailable error; normal startup and login continue to work.
-
-### Scripts
-
-`dev`, `build`, `start`, `lint`, `db:migrate` (dev migration), `db:deploy` (apply migrations), `db:seed`, `db:reset` (drop + migrate + seed), `db:studio`, `db:demo` (optional demo sales, see below).
-
-## Access control
-
-Defined once in `lib/permissions.ts` (page nav table + API rule table) and enforced in three layers:
-
-1. `proxy.ts` (Next 16's replacement for middleware) – reads the encrypted cookie; redirects anonymous users to `/login`, redirects forbidden pages to `/dashboard?denied=1`, returns `401`/`403` JSON for APIs.
-2. Server layouts/pages – `requireUser()` / `guardPage()` in `lib/auth.ts` re-load the user from the DB, so deactivating a user, changing a role or resetting a password takes effect immediately (the session must match the user's current `active`, `role` and `sessionVersion`; otherwise the cookie is cleared and the user is sent to `/login?reason=session`).
-3. Route handlers – `apiAuth([roles])` per endpoint.
-
-| Area | ADMIN | MANAGER | CASHIER |
-|------|:--:|:--:|:--:|
-| Dashboard, POS, Sales | yes | yes | yes (own sales) |
-| Products, Inventory, Reports | yes | yes | no |
-| Users | yes | no | no |
-| `GET /api/products` | yes | yes | yes |
-| `POST/PUT/PATCH/DELETE /api/products` | yes | yes | no |
-| `/api/users` (all methods) | yes | no (403) | no (403) |
-
-### Phase 2 – product management (Admin/Manager)
-
-`/products`: search by name/SKU, filter by category / active status / stock level, paginated; add, edit, deactivate/reactivate (soft delete – history is never lost); manage categories (add/rename). Creating a product with stock writes an `ADDITION` stock movement ("Initial stock"); changing the stock on edit writes an `ADJUSTMENT` for the difference. Images are validated by file signature (JPG/PNG/WebP/GIF, ≤ `MAX_UPLOAD_BYTES`) and stored in `UPLOAD_DIR`; on a host with an ephemeral disk, point `UPLOAD_DIR` at a persistent volume or replace `lib/uploads.ts` with object storage.
-
-API (all bodies validated with Zod; errors are `{ error, fieldErrors? }`): `GET/POST /api/products`, `GET/PATCH/DELETE /api/products/:id` (DELETE = deactivate), `GET/POST /api/categories`, `PATCH /api/categories/:id`, `POST /api/uploads` (multipart `file`). Cashiers can read active products/categories (for the POS) but every write returns 403.
-
-### Phase 3 – POS and sales (all roles)
-
-`/pos`: instant search (name/SKU; Enter adds an exact-SKU or single match, handy for barcode scanners), category chips, product grid (active products only; out-of-stock tiles disabled), cart with quantity (capped at stock), discount (fixed UGX or %, never above the subtotal), payment method (Cash with amount tendered and change; Mobile Money / Card / Bank Transfer with optional reference). Completing a sale shows a printable receipt; `/sales/:id/receipt` is the same receipt as a page (print stylesheet prints only the receipt). `/sales` lists sales — cashiers see only their own (other cashiers' receipts return 404), Admin/Manager see all.
-
-`POST /api/sales` accepts only `{ items: [{ productId, qty }], discount?, paymentMethod, amountTendered?, paymentReference? }` – **prices and totals are never taken from the client**. In one DB transaction it atomically decrements stock (`UPDATE … WHERE stockQty >= qty RETURNING price, cost`, so concurrent sales can't oversell), snapshots unit price/cost into `SaleItem`, writes a `SALE` StockMovement per item and assigns a sequential receipt number (`RU-000001`, from the `receipt_no_seq` Postgres sequence; a rolled-back sale can leave a gap). Errors: 400 validation, 409 insufficient stock / inactive product (`code` field), 404 unknown product. `GET /api/sales`, `GET /api/sales/:id`.
-
-### Phase 4a – inventory (Admin/Manager)
-
-`/inventory` (cashiers are redirected; the APIs return 403): summary cards (active products, low, out, inventory value at cost, potential retail value), a low/out-of-stock alert banner (also on the dashboard), and a searchable stock table filterable by category and All/Low/Out. *Low* = stock > 0 and ≤ min stock; *Out* = stock ≤ 0. Only active products are counted. Per-product actions: **Add stock** (receiving; optional unit cost, optionally updating the product's buying cost), **Reduce stock** (damage/expiry/loss…, reason required, cannot go below 0) and **Adjust** (set to the counted quantity, reason required). `/inventory/history` lists every movement with before → after quantities, filterable by product, type, user and date range (dates are East Africa Time) and paginated.
-
-Each action is one `UPDATE … RETURNING` on the product row inside a transaction that also writes the `StockMovement` (type, signed qty, `qtyBefore`, `qtyAfter`, reason, user). Row locking makes concurrent sales/adjustments safe: stock never goes negative and the movement chain always adds up. Editing a product's stock on the Products page uses the same code path.
-
-API: `GET /api/inventory` (overview + summary), `GET/POST /api/inventory/movements` (history / `{ action: "ADD"|"REDUCE"|"ADJUST", productId, qty | countedQty, reason, unitCost?, updateBuyingCost? }`).
-
-### Phase 4b – sales management and refunds
-
-`/sales`: filter by receipt number, date range (East Africa Time), cashier (staff), payment method and status; paginated; the cards show count, gross, refunded and net for the **whole filtered set**. Cashiers only ever see their own sales. `/sales/:id`: items (with refunded quantities), totals, payment details, full refund history and a link to the receipt; the receipt also lists refunds and the net total.
-
-**Refunds (Admin/Manager only; cashiers get 403 and see no button)** – `POST /api/refunds { saleId, fullRefund? | items: [{ saleItemId, qty, restock? }], reason (required), method? }`. One transaction: the sale row is locked (`SELECT … FOR UPDATE`) so concurrent refunds are serialised and quantities are re-read after the lock (no double refunds; a refund can never exceed what is still refundable); a `Refund` + `RefundItem`s are created; restocked items go back to stock with an atomic `UPDATE … RETURNING` and a `RETURN` stock movement (before/after); `Sale.refundedAmount` and `Sale.status` (`PARTIALLY_REFUNDED` → `REFUNDED`) are updated. The sale discount is spread proportionally over items, and a full refund always equals the sale total exactly. Untick *Restock* for damaged goods (the cost is then kept as a loss).
-
-**Netting refunds out of reports** – use `lib/finance.ts` (`getFinancials`): `revenue = Σ Sale.total − Σ Sale.refundedAmount` (voided excluded), `COGS = Σ unitCost×qty − Σ unitCost×returned qty that was restocked`, `profit = revenue − COGS`. The dashboard and `GET /api/reports/summary` already use it.
-
-### Phase 5 – dashboard and reports
-
-**Dashboard** (all roles): net sales today / this week (Mon–Sun) / this month, transactions today, active products, low/out-of-stock count, and – Admin/Manager only – gross profit this month with margin and COGS. Charts (recharts): daily net sales for the last 30 days, net sales by payment method (donut), top 5 products by net units (bar), plus a low-stock list. **Cashiers see only their own sales** and never any cost/profit figures (those aren't even queried for their page).
-
-**`/reports`** (Admin/Manager; cashiers are redirected, the API returns 403): date range presets *Today, This week, This month, Last 30 days, Custom* (max 1,100 days), and eight reports – **Sales** (list + totals; screen shows the latest 200, exports include all), **Profit** (sales before discounts, discounts, refunds, net revenue, COGS, gross profit, margin; by category), **Inventory** (current stock, value at cost and retail), **Best sellers**, **Low stock** (with units sold in the period and a suggested reorder), **By cashier**, **By payment method**, **Summary** grouped by day / week / month.
-
-**Exports** – every report: `GET /api/reports/export?report=<sales|profit|inventory|best-sellers|low-stock|cashiers|payments|summary>&format=<csv|pdf>&preset=<today|week|month|last30|custom>&from=YYYY-MM-DD&to=YYYY-MM-DD&grain=<day|week|month>`. Role-checked (proxy + handler) and Zod-validated (400 with `fieldErrors`). CSV: UTF-8 with BOM, plain integer UGX columns, local times, formula-injection guard, summary + notes below the table. PDF: real A4-landscape file generated server-side with **pdfkit** (summary boxes, paginated table with repeated header, totals, notes, page numbers). The page, CSV and PDF are rendered from the same report object, so they always agree.
-
-**How the numbers are computed** – all money goes through `lib/finance.ts` (single SQL CTE per query: sales in scope → per-sale COGS net of restocked returns → grouped). Net sales = Σ `Sale.total` − Σ `Sale.refundedAmount`; refunds count against the **original sale's date**; voided sales excluded; days/weeks/months are bucketed in **Africa/Kampala** time in SQL, and empty days are filled with zeros (`generate_series`), so everything is correct with no sales. Per-product/category revenue spreads the sale discount over its lines (may differ from totals by a few UGX of rounding).
-
-**Demo sales (optional)** – `npm run db:demo` creates ~30 days of realistic sales (weekday/weekend pattern, mixed payment methods, discounts, ~4% refunds incl. damaged returns, supplier restocks) through the **real** `createSale` / `createRefund` / stock-action code, executed in chronological order and back-dated, so stock levels, stock movements (before/after) and receipt numbers stay consistent. Options: `-- --days 14`, `-- --seed 7` (deterministic), `-- --force` (allow when sales already exist; otherwise it refuses). Undo with `npm run db:reset`.
-
-### Phase 6 – user management (Admin only)
-
-`/users` (Managers and Cashiers are redirected to `/dashboard?denied=1`; every `/api/users` call returns 403 for them): list with name, email, role, status, created date and last login, search by name/email and filters for role and status. **Add user** (name, email, role, initial password), **Edit** (name, email, role), **Reset password** (the admin sets a new one) and **Deactivate / Reactivate**. Users are never hard-deleted because sales, refunds and stock movements reference them; an inactive user cannot sign in.
-
-- Emails are trimmed, lowercased and unique case-insensitively. Passwords: at least 8 characters with a letter and a number (max 72 bytes, bcrypt's limit), hashed with bcryptjs; hashes are never returned by any API.
-- **Safety rules (server-side, 409 with a clear message and `code`):** an admin can't deactivate their own account (`SELF_DEACTIVATE`) or change their own role (`SELF_DEMOTE`), and the last active Admin can never be deactivated or demoted (`LAST_ADMIN`). These checks run in a transaction behind a Postgres advisory lock, so two admins demoting each other at the same time can't leave the shop without an admin.
-- **Session invalidation:** `User.sessionVersion` is incremented on a password reset, role change or deactivation; sessions store the version they were issued with and `lib/auth.ts` rejects a mismatch, so the user is signed out everywhere on their next request (reactivating does not revive old sessions). An admin resetting their own password stays signed in on the current device only. Sessions issued before this field existed are treated as stale (one forced re-login after upgrading).
-- `User.lastLoginAt` is set on each successful sign-in (without touching `updatedAt`).
-
-API (Zod-validated; errors are `{ error, fieldErrors?, code? }`): `GET /api/users?q=&role=ADMIN|MANAGER|CASHIER&status=active|inactive|all`, `POST /api/users { name, email, role, password }`, `GET /api/users/:id`, `PATCH /api/users/:id { name?, email?, role?, active? }`, `DELETE /api/users/:id` (= deactivate), `POST /api/users/:id/password { password }`.
-
-Other endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `GET /api/me`, `GET /api/products`, `GET /api/inventory` and `GET /api/reports/summary` (admin/manager), `GET /api/sales`.
-
-Self-service password recovery is available from `/login/forgot-password`. Reset tokens are random, stored only as SHA-256 hashes, expire after 30 minutes, and are single-use. Recovery requests use database-backed per-email and per-IP limits so the protection works across serverless instances. A successful recovery increments `User.sessionVersion`, invalidating existing sessions without changing the user's role or active status. Apply the password-recovery migration with `npm run db:deploy` before using the feature.
-
-## Schema (`prisma/schema.prisma`)
-
-- **User** – email (unique, stored lowercase), name, passwordHash (bcrypt), `role` (ADMIN | MANAGER | CASHIER), active, `sessionVersion` (bumped to sign the user out everywhere), `lastLoginAt`.
-- **Category** – name, sortOrder.
-- **Product** – sku (unique), name, image, category, buyingCost, sellingPrice, stockQty, minStock, active.
-- **StockMovement** – product, `type` (SALE | ADDITION | REDUCTION | ADJUSTMENT | RETURN), signed `qty`, reason, user, createdAt; optional link to Sale / PurchaseOrder. Full audit trail of stock changes.
-- **Sale** – unique receiptNo, cashier, subtotal, discount, total, `paymentMethod` (CASH | MOBILE_MONEY | CARD | BANK_TRANSFER), `status` (COMPLETED | VOIDED | PARTIALLY_REFUNDED | REFUNDED), amountTendered, notes, createdAt.
-- **SaleItem** – sale, product, qty, **unitPrice and unitCost snapshots** (later price changes don't rewrite history, and profit stays reportable), lineTotal.
-- **Refund** / **RefundItem** – refund against a sale (amount, reason, user), per-item qty and whether to restock.
-- *Bonus:* **Supplier**, **PurchaseOrder** (DRAFT | ORDERED | RECEIVED | CANCELLED), **PurchaseOrderItem**.
-
-## Seed data
-
-3 users, 6 categories (Drinks, Snacks, Stationery, Toiletries, Groceries, Household), 20 products with costs/prices/stock (one below min-stock and one out of stock to exercise low-stock UI), opening-stock movements, and one supplier. The seed is idempotent; re-running keeps live stock quantities.
-
-## Project layout
-
-```
-app/login            login page          app/(app)/*   authenticated shell + pages
-app/api/*            route handlers      proxy.ts      first-line auth/role checks
-lib/permissions.ts   role/route tables   lib/auth.ts   server-side guards
-lib/session.ts       iron-session cfg    prisma/       schema, migrations, seed, demo-sales
-lib/finance.ts       net-of-refunds sums lib/reports.ts report builders (page/CSV/PDF)
-lib/report-export.ts CSV + pdfkit PDF    components/charts  recharts wrappers
-```
-
-## Roadmap
-
-- **Phase 1 (done):** schema, auth, roles, app shell.
-- **Phase 2 (done):** product and category management.
-- **Phase 3 (done):** POS checkout, receipts, sales list.
-- **Phase 4a (done):** inventory overview, stock actions, stock history, low-stock alerts.
-- **Phase 4b (done):** sales filters/totals, sale detail, refunds with restock.
-- **Phase 5 (done):** dashboard charts, reports with CSV/PDF export, demo-sales script.
-- **Phase 6 (done):** user management (add/edit/reset password/deactivate, last-admin protection, session invalidation) and self-service password recovery.

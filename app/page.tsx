@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BrandMark } from "@/components/brand";
+import { BrandLogo } from "@/components/brand";
 
 const features = [
   {
@@ -23,9 +23,8 @@ const features = [
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-3" aria-label="RingUp home">
-      <BrandMark size={40} />
       <span>
-        <span className="block text-xl font-bold tracking-tight text-zinc-950">RingUp</span>
+        <BrandLogo width={150} />
         <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-800">Point of sale</span>
       </span>
     </Link>
