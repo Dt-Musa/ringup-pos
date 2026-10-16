@@ -1,3 +1,8 @@
+if (process.env.NODE_ENV === "production") {
+  console.error("Seeding is blocked in production. Do not bypass this guard by changing NODE_ENV.");
+  process.exit(1);
+}
+
 import { PrismaClient, Role, StockMovementType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -38,13 +43,18 @@ const products: [string, string, string, number, number, number, number, string?
 
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  let created = 0;
+  let skipped = 0;
   for (const u of users) {
-    await prisma.user.upsert({
-      where: { email: u.email },
-      update: { name: u.name, role: u.role, passwordHash, active: true },
-      create: { ...u, passwordHash },
-    });
+    const existing = await prisma.user.findUnique({ where: { email: u.email }, select: { id: true } });
+    if (existing) {
+      skipped++;
+      continue; // leave existing accounts completely unchanged
+    }
+    await prisma.user.create({ data: { ...u, passwordHash } });
+    created++;
   }
+  if (skipped > 0) console.log(`Skipped ${skipped} existing user(s) – their accounts were not modified.`);
   const admin = await prisma.user.findUniqueOrThrow({ where: { email: "admin@pos.test" } });
 
   const catIds = new Map<string, string>();
