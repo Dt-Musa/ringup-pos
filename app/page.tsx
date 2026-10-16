@@ -10,7 +10,12 @@ const features = [
   {
     title: "Keep stock up to date",
     description: "Manage products and categories, record stock changes and see what is running low.",
-    badge: "Products",
+    badge: "Inventory",
+  },
+  {
+    title: "Manage supplier orders",
+    description: "Create purchase orders, track their progress and receive items into stock.",
+    badge: "Purchases",
   },
   {
     title: "Check your sales",
@@ -56,14 +61,14 @@ export default function Home() {
           <div className="px-4">
             <span className="inline-block rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900">Made for shops</span>
             <h1 className="mx-auto mt-5 max-w-3xl text-3xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-[56px]">
-              Sell fast. Stay in stock. See the whole shop.
+              Run your shop from one place.
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
-              RingUp helps your team sell products, manage stock, review sales and keep the day moving from one place.
+              Check out customers, manage products and supplier orders, and keep sales and stock information close at hand.
             </p>
             <div className="mt-9 flex flex-wrap justify-center gap-3">
               <Link href="/login" className="group inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-emerald-800">
-                Get started
+                Sign in
                 <ArrowIcon />
               </Link>
             </div>
@@ -73,7 +78,7 @@ export default function Home() {
         <section className="mt-6 overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-sm sm:mt-8" aria-label="RingUp workspace preview">
           <div className="bg-slate-50 p-3 sm:p-5">
             <div className="relative mx-auto aspect-[1600/795] w-full max-w-[760px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-              <Image src="/assets/LandingPage/dashboard.jpg" alt="RingUp dashboard showing sample sales, products and stock figures" fill quality={75} sizes="(max-width: 640px) calc(100vw - 2rem), 760px" className="object-contain object-top" />
+              <Image src="/assets/LandingPage/dashboard.jpg" alt="RingUp dashboard showing sales, transactions, products and stock summaries" fill quality={75} sizes="(max-width: 640px) calc(100vw - 2rem), 760px" className="object-contain object-top" />
             </div>
           </div>
           <p className="border-t border-slate-200 px-4 py-2.5 text-center text-xs text-slate-500">Sample figures shown for illustration.</p>
@@ -83,9 +88,9 @@ export default function Home() {
           <div>
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-800">One place to run the day</span>
             <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Everything your shop needs.</h2>
-            <p className="mt-2.5 max-w-xl text-slate-600">The main parts of RingUp work together from the sale to the end-of-day report. Admins, managers and cashiers each get the access they need.</p>
+            <p className="mt-2.5 max-w-xl text-slate-600">Bring checkout, inventory, supplier purchasing and reporting into one workflow, with access tailored for administrators, managers and cashiers.</p>
           </div>
-          <div className="mt-6 grid gap-3.5 sm:grid-cols-3">
+          <div className="mt-6 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
             {features.map((feature) => (
               <article key={feature.title} className="rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
                 <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">{feature.badge}</span>
@@ -114,9 +119,9 @@ export default function Home() {
           <Image src="/assets/LandingPage/hero-image.jpg" alt="Shop checkout counter with a payment terminal" fill quality={75} sizes="(max-width: 640px) 100vw, 1040px" className="absolute inset-0 -z-20 object-cover" />
           <div className="absolute inset-0 -z-10 bg-emerald-950/80" />
           <h2 className="relative mx-auto max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">Make every sale count.</h2>
-          <p className="relative mx-auto mt-3 max-w-md text-sm leading-6 text-emerald-50">Sell products, record stock changes and review what happened today.</p>
+          <p className="relative mx-auto mt-3 max-w-md text-sm leading-6 text-emerald-50">Keep checkout, stock and sales activity moving with your team.</p>
           <Link href="/login" className="relative mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-base font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50">
-            Get started
+            Sign in
             <ArrowIcon />
           </Link>
         </section>
@@ -124,7 +129,6 @@ export default function Home() {
         <footer className="mt-9 flex flex-col items-start justify-between gap-3 border-t border-slate-300 pt-[22px] text-sm text-slate-600 sm:flex-row sm:items-center">
           <Brand />
           <div className="flex flex-col gap-1 sm:items-end">
-            <p>Email: hello@ringup.com</p>
             <p>Phone: +256 740 707031</p>
           </div>
         </footer>
