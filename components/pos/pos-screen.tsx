@@ -111,7 +111,10 @@ function updateCart(
 export function PosScreen({ products, categories }: { products: PosProduct[]; categories: PosCategory[] }) {
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
+  const barcodeRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [barcodeNotice, setBarcodeNotice] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [categoryId, setCategoryId] = useState("");
   const cart = useSyncExternalStore(subscribeCart, getCartSnapshot, () => EMPTY_CART);
   const setCart = updateCart;
@@ -241,16 +244,68 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
     setClearUndo(null);
   }
 
+  function handleBarcodeScan(codeRaw: string) {
+    const code = codeRaw.trim();
+    if (!code) return;
+
+    const lower = code.toLowerCase();
+    const target = products.find(
+      (p) => (p.barcode && p.barcode.toLowerCase() === lower) || p.sku.toLowerCase() === lower,
+    );
+
+    if (!target) {
+      setBarcodeNotice({
+        message: `Unknown barcode "${code}". No matching product found.`,
+        type: "error",
+      });
+      return;
+    }
+
+    if (target.stockQty <= 0) {
+      setBarcodeNotice({
+        message: `"${target.name}" is out of stock`,
+        type: "error",
+      });
+      return;
+    }
+
+    const currentQty = inCart(target.id);
+    if (currentQty >= target.stockQty) {
+      setBarcodeNotice({
+        message: `Cannot add more. Only ${target.stockQty} of "${target.name}" in stock`,
+        type: "error",
+      });
+      return;
+    }
+
+    add(target);
+    setBarcodeNotice({
+      message: `Scanned "${target.name}" (${currentQty + 1} in cart)`,
+      type: "success",
+    });
+    setBarcodeInput("");
+    setTimeout(() => {
+      setBarcodeNotice((curr) => (curr?.type === "success" ? null : curr));
+    }, 2500);
+    barcodeRef.current?.focus();
+  }
+
   function onSearchKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     e.preventDefault();
     const q = query.trim().toLowerCase();
     if (!q) return;
-    const exact = filtered.find((p) => p.sku.toLowerCase() === q);
+    const exact = products.find((p) => (p.barcode && p.barcode.toLowerCase() === q) || p.sku.toLowerCase() === q);
     const target = exact ?? (filtered.length === 1 ? filtered[0] : undefined);
     if (target) {
-      add(target);
-      setQuery("");
+      if (target.stockQty <= 0) {
+        flash(`"${target.name}" is out of stock`);
+      } else {
+        add(target);
+        setQuery("");
+      }
+    } else {
+      flash(`No product matches "${query.trim()}"`);
     }
   }
 
@@ -298,18 +353,68 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
     <div className="grid min-w-0 gap-5 pb-[calc(5rem+env(safe-area-inset-bottom))] md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
       {/* ---------- catalogue ---------- */}
       <section className="min-w-0">
-        <input
-          ref={searchRef}
-          autoFocus
-          type="search"
-          name="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onSearchKey}
-          placeholder="Search by name or scan / type SKU, then Enter…"
-          aria-label="Search products"
-          className="min-h-12 w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-        />
+        <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div>
+            <input
+              ref={searchRef}
+              type="search"
+              name="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onSearchKey}
+              placeholder="Search by name, SKU or category…"
+              aria-label="Search products"
+              className="min-h-12 w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+            />
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleBarcodeScan(barcodeInput);
+            }}
+            className="relative flex items-center"
+          >
+            <input
+              ref={barcodeRef}
+              autoFocus
+              type="text"
+              name="barcode"
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              placeholder="Scan barcode or type code, then Enter…"
+              aria-label="Scan barcode"
+              data-testid="barcode-input"
+              className="min-h-12 w-full rounded-lg border-2 border-emerald-600 bg-white px-4 py-3 pr-20 font-mono text-base text-slate-900 shadow-sm placeholder:font-sans placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 dark:border-emerald-500 dark:bg-zinc-900 dark:text-white"
+            />
+            <button
+              type="submit"
+              className="absolute right-1.5 min-h-9 rounded-md bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 active:scale-95"
+            >
+              Scan
+            </button>
+          </form>
+        </div>
+
+        {barcodeNotice && (
+          <div
+            role={barcodeNotice.type === "error" ? "alert" : "status"}
+            className={`mt-2.5 flex items-center justify-between rounded-lg px-4 py-2.5 text-sm ${
+              barcodeNotice.type === "error"
+                ? "border border-red-300 bg-red-50 font-medium text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+                : "border border-emerald-300 bg-emerald-50 font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+            }`}
+          >
+            <span>{barcodeNotice.message}</span>
+            <button
+              type="button"
+              onClick={() => setBarcodeNotice(null)}
+              className="ml-3 text-xs opacity-75 hover:opacity-100"
+              aria-label="Dismiss barcode notice"
+            >
+              <Icon name="x" />
+            </button>
+          </div>
+        )}
         <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Categories">
           {[{ id: "", name: "All" }, ...categories].map((c) => (
             <button
@@ -373,7 +478,9 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   <div className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold max-sm:min-h-[2rem] max-sm:text-xs">{p.name}</div>
                   <div className="mt-1 text-sm font-bold text-emerald-700 max-sm:mt-0.5 max-sm:text-xs dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
                   <div className="mt-1 flex items-center justify-between gap-1 text-xs text-zinc-500 max-sm:mt-0.5 max-sm:text-[10px]">
-                    <span className="truncate font-mono">{p.sku}</span>
+                    <span className="truncate font-mono" title={p.barcode ? `SKU: ${p.sku} | Barcode: ${p.barcode}` : `SKU: ${p.sku}`}>
+                      {p.sku}{p.barcode ? ` · #${p.barcode}` : ""}
+                    </span>
                     <span className={out ? "font-semibold text-red-600" : low ? "font-semibold text-amber-600" : ""}>
                       {out ? "Out of stock" : `${p.stockQty} left`}
                     </span>

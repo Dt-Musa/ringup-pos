@@ -1,6 +1,7 @@
 export type PosProduct = {
   id: string;
   sku: string;
+  barcode: string | null;
   name: string;
   image: string | null;
   categoryId: string;
