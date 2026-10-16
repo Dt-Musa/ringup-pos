@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { btnPrimary, btnSecondary } from "@/components/ui/modal";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { formatUGX } from "@/lib/format";
 import { CategoryManagerModal } from "./category-manager-modal";
@@ -38,10 +39,10 @@ export function ProductsManager({ products, categories }: { products: ProductRow
     <>
       <div className="mb-4 flex flex-wrap justify-end gap-2">
         <button onClick={() => setModal({ kind: "categories" })} className={btnSecondary}>
-          Manage categories
+          <Icon name="sliders" /> Manage categories
         </button>
         <button onClick={() => setModal({ kind: "product" })} className={btnPrimary}>
-          + Add product
+          <Icon name="plus" /> Add product
         </button>
       </div>
 
@@ -78,7 +79,7 @@ export function ProductsManager({ products, categories }: { products: ProductRow
               const low = !out && p.stockQty <= p.minStock;
               return (
                 <tr key={p.id} className={`border-t border-zinc-100 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/40 ${p.active ? "" : "opacity-60"}`}>
-                  <td data-label="Product" className="px-4 py-2">
+                  <td data-label="Product" className="px-4 py-2 sm:min-w-56">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-zinc-100 text-xs text-zinc-400 dark:bg-zinc-800">
                         {p.image ? (
@@ -88,15 +89,18 @@ export function ProductsManager({ products, categories }: { products: ProductRow
                           p.name.slice(0, 1).toUpperCase()
                         )}
                       </div>
-                      <span className="font-medium">{p.name}</span>
+                      <span className="font-semibold">{p.name}</span>
                     </div>
                   </td>
-                  <td data-label="SKU" className="px-4 py-2 font-mono text-xs">{p.sku}</td>
+                  <td data-label="SKU" className="px-4 py-2 font-mono text-xs">
+                    <div>{p.sku}</div>
+                    {p.barcode && <div className="text-[11px] text-zinc-400 dark:text-zinc-500">#{p.barcode}</div>}
+                  </td>
                   <td data-label="Category" className="px-4 py-2">{p.categoryName}</td>
                   <td data-label="Cost" className="px-4 py-2 text-right">{formatUGX(p.buyingCost)}</td>
-                  <td data-label="Price" className="px-4 py-2 text-right">{formatUGX(p.sellingPrice)}</td>
-                  <td data-label="Stock" className="px-4 py-2 text-right">
-                    <span className={out ? "font-semibold text-red-600" : low ? "font-semibold text-amber-600" : ""}>{p.stockQty}</span>
+                  <td data-label="Price" className="px-4 py-2 text-right font-semibold text-emerald-800">{formatUGX(p.sellingPrice)}</td>
+                  <td data-label="Stock" className="px-4 py-2 text-right font-semibold">
+                    <span className={out ? "text-red-600" : low ? "text-amber-600" : "text-zinc-800"}>{p.stockQty}</span>
                     {out && <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-700">Out</span>}
                     {low && <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">Low</span>}
                   </td>
@@ -107,7 +111,7 @@ export function ProductsManager({ products, categories }: { products: ProductRow
                   </td>
                   <td data-label="Actions" className="whitespace-nowrap px-4 py-2 text-right">
                     <button onClick={() => setModal({ kind: "product", product: p })} className="mr-3 inline-flex min-h-10 items-center font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
-                      Edit
+                      <Icon name="edit" /> Edit
                     </button>
                     <button
                       onClick={() => p.active ? setDeactivateProduct(p) : void toggleActive(p)}

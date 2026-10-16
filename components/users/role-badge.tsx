@@ -7,5 +7,5 @@ const STYLES: Record<Role, string> = {
 };
 
 export function RoleBadge({ role }: { role: Role }) {
-  return <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${STYLES[role]}`}>{ROLE_LABELS[role]}</span>;
+  return <span className={`inline-flex min-h-7 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${STYLES[role]}`}>{ROLE_LABELS[role]}</span>;
 }

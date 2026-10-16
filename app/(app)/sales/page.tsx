@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { formatDateTime, formatUGX, PAYMENT_LABELS } from "@/lib/format";
 import { listSales } from "@/lib/sales-query";
 import { listSalesSchema } from "@/lib/validation/refund";
+import { Icon } from "@/components/ui/icon";
 
 type SP = Record<string, string | string[] | undefined>;
 const FILTER_KEYS = ["q", "from", "to", "cashierId", "paymentMethod", "status"];
@@ -123,20 +124,20 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                   </Link>
                 </td>
                 <td data-label="Date" className="whitespace-nowrap px-4 py-2">{formatDateTime(s.createdAt)}</td>
-                <td data-label="Cashier" className="px-4 py-2">{s.cashier.name}</td>
+                <td data-label="Cashier" data-secondary="true" className="px-4 py-2">{s.cashier.name}</td>
                 <td data-label="Items" className="px-4 py-2 text-right">{s._count.items}</td>
                 <td data-label="Payment" className="px-4 py-2">{PAYMENT_LABELS[s.paymentMethod]}</td>
                 <td data-label="Total" className="px-4 py-2 text-right font-medium">{formatUGX(s.total)}</td>
-                <td data-label="Refunded" className={`px-4 py-2 text-right ${s.refundedAmount ? "text-red-600" : "text-zinc-400"}`}>{s.refundedAmount ? `-${formatUGX(s.refundedAmount)}` : "—"}</td>
+                <td data-label="Refunded" data-secondary="true" className={`px-4 py-2 text-right ${s.refundedAmount ? "text-red-600" : "text-zinc-400"}`}>{s.refundedAmount ? `-${formatUGX(s.refundedAmount)}` : "—"}</td>
                 <td data-label="Status" className="px-4 py-2">
                   <SaleStatusBadge status={s.status} />
                 </td>
                 <td data-label="Actions" className="whitespace-nowrap px-4 py-2 text-right">
-                  <Link href={`/sales/${s.id}`} className="mr-3 inline-flex min-h-10 items-center font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
-                    Details
+                  <Link href={`/sales/${s.id}`} className="mr-3 inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
+                    <Icon name="eye" /> Details
                   </Link>
-                  <Link href={`/sales/${s.id}/receipt`} className="inline-flex min-h-10 items-center font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
-                    Receipt
+                  <Link href={`/sales/${s.id}/receipt`} className="inline-flex min-h-10 items-center gap-1.5 font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950">
+                    <Icon name="receipt" /> Receipt
                   </Link>
                 </td>
               </tr>

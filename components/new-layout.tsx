@@ -84,7 +84,7 @@ function UserBlock({ userName, role, collapsed = false, onLogout }: { userName: 
         type="button"
         onClick={onLogout}
         title={collapsed ? "Log out" : undefined}
-        className={`flex min-h-11 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-red-300 hover:bg-red-500/10 hover:text-red-200 ${
+        className={`flex min-h-11 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-zinc-400 hover:bg-white/10 hover:text-white ${
           collapsed ? "justify-center px-0" : "px-3"
         }`}
       >
@@ -148,7 +148,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
           <BrandMark size={36} />
           <span className="text-lg font-bold tracking-tight">RingUp</span>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Primary navigation">
+        <nav className="flex-1 space-y-2 overflow-y-auto p-3" aria-label="Primary navigation">
           {items.map((item) => <NavLink key={item.href} item={item} />)}
         </nav>
         <UserBlock userName={userName} role={role} onLogout={requestLogout} />
@@ -185,13 +185,13 @@ export function NewLayout({ children, items, userName, role }: { children: React
         {visibleTabs.map((item) => {
           const active = activeFor(pathname, item.href);
           return (
-            <Link key={item.href} href={item.href} className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-emerald-700" : "text-zinc-500"}`}>
+            <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-12 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-emerald-700" : "text-zinc-500"}`}>
               <Icon name={ICONS[item.label]} />
               {item.label}
             </Link>
           );
         })}
-        <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${moreOpen || moreActive ? "text-emerald-700" : "text-zinc-500"}`}>
+        <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} className={`flex min-h-12 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${moreOpen || moreActive ? "text-emerald-700" : "text-zinc-500"}`}>
           <Icon name="more" />
           More
         </button>
@@ -200,7 +200,7 @@ export function NewLayout({ children, items, userName, role }: { children: React
       {moreOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="More navigation">
           <button type="button" aria-label="Close more navigation" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-zinc-950/45" />
-          <section className="absolute inset-x-0 bottom-0 min-h-[40vh] max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-zinc-200 bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+          <section className="absolute inset-x-0 bottom-0 max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-t-3xl border-t border-zinc-200 bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
             <div
               onPointerDown={onSheetPointerDown}
               onPointerMove={onSheetPointerMove}

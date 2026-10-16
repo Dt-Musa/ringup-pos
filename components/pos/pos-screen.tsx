@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { useRouter } from "next/navigation";
 import { Receipt, toReceiptSale, type ReceiptSale } from "@/components/receipt";
 import { Modal } from "@/components/ui/modal";
+import { Icon } from "@/components/ui/icon";
 import { formatUGX, PAYMENT_LABELS } from "@/lib/format";
 import type { PosCategory, PosProduct } from "./types";
 
@@ -24,12 +25,99 @@ function CartIcon() {
   );
 }
 
+const CART_STORAGE_KEY = "ringup:pos-cart";
+const EMPTY_CART: { productId: string; qty: number }[] = [];
+
+let memoryCart: { productId: string; qty: number }[] | null = null;
+const cartListeners = new Set<() => void>();
+
+function parseStoredCart(raw: string | null): { productId: string; qty: number }[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const qtyMap = new Map<string, number>();
+    for (const item of parsed) {
+      if (
+        item &&
+        typeof item === "object" &&
+        typeof item.productId === "string" &&
+        item.productId.trim().length > 0 &&
+        typeof item.qty === "number" &&
+        Number.isInteger(item.qty) &&
+        item.qty > 0
+      ) {
+        qtyMap.set(item.productId, (qtyMap.get(item.productId) ?? 0) + item.qty);
+      }
+    }
+    return Array.from(qtyMap.entries()).map(([productId, qty]) => ({ productId, qty }));
+  } catch {
+    return [];
+  }
+}
+
+function getCartSnapshot(): { productId: string; qty: number }[] {
+  if (typeof window === "undefined") return EMPTY_CART;
+  if (memoryCart === null) {
+    try {
+      const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+      memoryCart = parseStoredCart(raw);
+    } catch {
+      memoryCart = [];
+    }
+  }
+  return memoryCart;
+}
+
+function subscribeCart(callback: () => void) {
+  cartListeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === CART_STORAGE_KEY) {
+      memoryCart = parseStoredCart(e.newValue);
+      callback();
+    }
+  };
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
+  return () => {
+    cartListeners.delete(callback);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage);
+    }
+  };
+}
+
+function updateCart(
+  action:
+    | { productId: string; qty: number }[]
+    | ((prev: { productId: string; qty: number }[]) => { productId: string; qty: number }[]),
+) {
+  const current = memoryCart ?? getCartSnapshot();
+  const next = typeof action === "function" ? action(current) : action;
+  memoryCart = next;
+  try {
+    if (next.length === 0) {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
+    }
+  } catch {
+    // Ignore storage quota or security errors
+  }
+  cartListeners.forEach((listener) => listener());
+}
+
 export function PosScreen({ products, categories }: { products: PosProduct[]; categories: PosCategory[] }) {
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
+  const barcodeRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [barcodeNotice, setBarcodeNotice] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [categoryId, setCategoryId] = useState("");
-  const [cart, setCart] = useState<{ productId: string; qty: number }[]>([]);
+  const cart = useSyncExternalStore(subscribeCart, getCartSnapshot, () => EMPTY_CART);
+  const setCart = updateCart;
   const [discountType, setDiscountType] = useState<"FIXED" | "PERCENT">("FIXED");
   const [discountValue, setDiscountValue] = useState("");
   const [method, setMethod] = useState<Method>("CASH");
@@ -133,6 +221,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
     setReference("");
     setMethod("CASH");
     setError(null);
+    try {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } catch {
+      // Ignore localStorage errors
+    }
   }
 
   function clearCart() {
@@ -151,21 +244,77 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
     setClearUndo(null);
   }
 
+  function handleBarcodeScan(codeRaw: string) {
+    const code = codeRaw.trim();
+    if (!code) return;
+
+    const lower = code.toLowerCase();
+    const target = products.find(
+      (p) => (p.barcode && p.barcode.toLowerCase() === lower) || p.sku.toLowerCase() === lower,
+    );
+
+    if (!target) {
+      setBarcodeNotice({
+        message: `Unknown barcode "${code}". No matching product found.`,
+        type: "error",
+      });
+      return;
+    }
+
+    if (target.stockQty <= 0) {
+      setBarcodeNotice({
+        message: `"${target.name}" is out of stock`,
+        type: "error",
+      });
+      return;
+    }
+
+    const currentQty = inCart(target.id);
+    if (currentQty >= target.stockQty) {
+      setBarcodeNotice({
+        message: `Cannot add more. Only ${target.stockQty} of "${target.name}" in stock`,
+        type: "error",
+      });
+      return;
+    }
+
+    add(target);
+    setBarcodeNotice({
+      message: `Scanned "${target.name}" (${currentQty + 1} in cart)`,
+      type: "success",
+    });
+    setBarcodeInput("");
+    setTimeout(() => {
+      setBarcodeNotice((curr) => (curr?.type === "success" ? null : curr));
+    }, 2500);
+    barcodeRef.current?.focus();
+  }
+
   function onSearchKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     e.preventDefault();
     const q = query.trim().toLowerCase();
     if (!q) return;
-    const exact = filtered.find((p) => p.sku.toLowerCase() === q);
+    const exact = products.find((p) => (p.barcode && p.barcode.toLowerCase() === q) || p.sku.toLowerCase() === q);
     const target = exact ?? (filtered.length === 1 ? filtered[0] : undefined);
     if (target) {
-      add(target);
-      setQuery("");
+      if (target.stockQty <= 0) {
+        flash(`"${target.name}" is out of stock`);
+      } else {
+        add(target);
+        setQuery("");
+      }
+    } else {
+      flash(`No product matches "${query.trim()}"`);
     }
   }
 
   async function complete() {
     if (!canComplete) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setError("Network error – the sale was not completed. Check your connection and try again.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     const body = {
@@ -201,21 +350,71 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
   const inCart = (id: string) => cart.find((c) => c.productId === id)?.qty ?? 0;
 
   return (
-    <div className="grid min-w-0 gap-5 pb-16 md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
+    <div className="grid min-w-0 gap-5 pb-[calc(5rem+env(safe-area-inset-bottom))] md:grid-cols-[minmax(0,1fr)_360px] md:gap-5 md:pb-0 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
       {/* ---------- catalogue ---------- */}
       <section className="min-w-0">
-        <input
-          ref={searchRef}
-          autoFocus
-          type="search"
-          name="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onSearchKey}
-          placeholder="Search by name or scan / type SKU, then Enter…"
-          aria-label="Search products"
-          className="w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-        />
+        <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div>
+            <input
+              ref={searchRef}
+              type="search"
+              name="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onSearchKey}
+              placeholder="Search by name, SKU or category…"
+              aria-label="Search products"
+              className="min-h-12 w-full rounded-lg border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+            />
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleBarcodeScan(barcodeInput);
+            }}
+            className="relative flex items-center"
+          >
+            <input
+              ref={barcodeRef}
+              autoFocus
+              type="text"
+              name="barcode"
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              placeholder="Scan barcode or type code, then Enter…"
+              aria-label="Scan barcode"
+              data-testid="barcode-input"
+              className="min-h-12 w-full rounded-lg border-2 border-emerald-600 bg-white px-4 py-3 pr-20 font-mono text-base text-slate-900 shadow-sm placeholder:font-sans placeholder:text-slate-500 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 dark:border-emerald-500 dark:bg-zinc-900 dark:text-white"
+            />
+            <button
+              type="submit"
+              className="absolute right-1.5 min-h-9 rounded-md bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 active:scale-95"
+            >
+              Scan
+            </button>
+          </form>
+        </div>
+
+        {barcodeNotice && (
+          <div
+            role={barcodeNotice.type === "error" ? "alert" : "status"}
+            className={`mt-2.5 flex items-center justify-between rounded-lg px-4 py-2.5 text-sm ${
+              barcodeNotice.type === "error"
+                ? "border border-red-300 bg-red-50 font-medium text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+                : "border border-emerald-300 bg-emerald-50 font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+            }`}
+          >
+            <span>{barcodeNotice.message}</span>
+            <button
+              type="button"
+              onClick={() => setBarcodeNotice(null)}
+              className="ml-3 text-xs opacity-75 hover:opacity-100"
+              aria-label="Dismiss barcode notice"
+            >
+              <Icon name="x" />
+            </button>
+          </div>
+        )}
         <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Categories">
           {[{ id: "", name: "All" }, ...categories].map((c) => (
             <button
@@ -235,8 +434,21 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
         </div>
 
         {filtered.length === 0 ? (
-          <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">
-            No products match &ldquo;{query}&rdquo;.
+          <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
+            <p>No products match &ldquo;{query}&rdquo;.</p>
+            {(query || categoryId) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setCategoryId("");
+                  searchRef.current?.focus();
+                }}
+                className="mt-3 min-h-11 rounded-lg border border-zinc-300 px-4 py-2 font-medium text-emerald-800 hover:bg-emerald-50 dark:border-zinc-700 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+              >
+                Clear search and category
+              </button>
+            )}
           </div>
         ) : (
           <div className="mt-4 min-w-0 grid auto-rows-fr grid-cols-2 gap-2.5 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:grid-cols-3 sm:gap-3 lg:pb-0 xl:grid-cols-4" data-testid="product-grid">
@@ -251,11 +463,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                   disabled={out}
                   onClick={() => add(p)}
                   data-sku={p.sku}
-                  className={`relative flex h-full min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 text-left shadow-md shadow-zinc-200/60 transition max-sm:p-2 dark:border-zinc-800 dark:bg-zinc-900 ${
+                  className={`relative flex h-full min-h-10 min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm shadow-zinc-200/60 transition max-sm:p-2 dark:border-zinc-800 dark:bg-zinc-900 ${
                     out ? "cursor-not-allowed opacity-50" : "hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-900/10 hover:ring-2 hover:ring-emerald-500 active:scale-[0.98]"
                   } ${qty > 0 ? "ring-2 ring-emerald-600" : ""}`}
                 >
-                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-20 max-sm:text-lg dark:bg-zinc-800">
+                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-zinc-100 text-2xl font-semibold text-zinc-400 max-sm:mb-1 max-sm:h-16 max-sm:text-lg dark:bg-zinc-800">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.image} alt="" className="h-full w-full p-1 object-contain" />
@@ -263,10 +475,12 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                       p.name.slice(0, 1).toUpperCase()
                     )}
                   </div>
-                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-medium max-sm:min-h-[2rem] max-sm:text-xs">{p.name}</div>
-                  <div className="mt-1 text-sm font-semibold text-emerald-700 max-sm:mt-0.5 max-sm:text-xs dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 max-sm:mt-0.5 max-sm:text-[10px]">
-                    <span className="font-mono">{p.sku}</span>
+                  <div className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold max-sm:min-h-[2rem] max-sm:text-xs">{p.name}</div>
+                  <div className="mt-1 text-sm font-bold text-emerald-700 max-sm:mt-0.5 max-sm:text-xs dark:text-emerald-400">{formatUGX(p.sellingPrice)}</div>
+                  <div className="mt-1 flex items-center justify-between gap-1 text-xs text-zinc-500 max-sm:mt-0.5 max-sm:text-[10px]">
+                    <span className="truncate font-mono" title={p.barcode ? `SKU: ${p.sku} | Barcode: ${p.barcode}` : `SKU: ${p.sku}`}>
+                      {p.sku}{p.barcode ? ` · #${p.barcode}` : ""}
+                    </span>
                     <span className={out ? "font-semibold text-red-600" : low ? "font-semibold text-amber-600" : ""}>
                       {out ? "Out of stock" : `${p.stockQty} left`}
                     </span>
@@ -287,7 +501,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
       <aside
         className={`${
           mobileCartOpen
-            ? "fixed inset-x-0 bottom-0 z-[60] max-h-[85vh] overflow-y-auto rounded-t-2xl px-4 pb-[env(safe-area-inset-bottom)]"
+            ? "fixed inset-x-0 bottom-0 z-[60] max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-t-2xl px-4 pb-[env(safe-area-inset-bottom)]"
             : "hidden"
         } lg:sticky lg:top-4 lg:block lg:self-start lg:overflow-visible lg:rounded-none lg:px-0`}
       >
@@ -297,11 +511,11 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
             <div className="flex items-center gap-3">
               {cart.length > 0 && (
                 <button onClick={clearCart} className="text-sm text-red-600 hover:underline">
-                  Clear
+                  <span className="inline-flex items-center gap-1"><Icon name="x" /> Clear</span>
                 </button>
               )}
               <button type="button" onClick={() => setMobileCartOpen(false)} aria-label="Close cart" className="text-xl leading-none text-zinc-400 hover:text-zinc-700 lg:hidden">
-                ×
+                <Icon name="x" />
               </button>
             </div>
           </div>
@@ -316,17 +530,18 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                     <div className="flex items-start justify-between gap-2">
                       <div className="font-medium">{l.product?.name ?? "Unavailable item"}</div>
                       <button onClick={() => remove(l.productId)} aria-label={`Remove ${l.product?.name ?? "item"}`} className="text-zinc-400 hover:text-red-600">
-                        ✕
+                        <Icon name="x" />
                       </button>
                     </div>
                     <div className="mt-1 flex items-center justify-between">
                       <div className="flex items-center">
                         <button
+                          type="button"
                           onClick={() => (l.qty <= 1 ? remove(l.productId) : setQty(l.productId, l.qty - 1))}
                           aria-label="Decrease quantity"
-                          className="h-8 w-8 rounded-l-md border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                          className="h-8 w-8 shrink-0 rounded-l-md border border-zinc-300 hover:bg-zinc-100 max-lg:h-10 max-lg:w-10 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         >
-                          −
+                          <Icon name="minus" />
                         </button>
                         <input
                           type="number"
@@ -335,14 +550,15 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                           value={l.qty}
                           onChange={(e) => setQty(l.productId, e.target.valueAsNumber)}
                           aria-label={`Quantity of ${l.product?.name ?? "item"}`}
-                          className="h-8 w-14 border-y border-zinc-300 bg-transparent text-center dark:border-zinc-700 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                          className="h-8 w-14 border-y border-zinc-300 bg-transparent text-center dark:border-zinc-700 max-lg:h-10"
                         />
                         <button
+                          type="button"
                           onClick={() => setQty(l.productId, l.qty + 1)}
                           aria-label="Increase quantity"
-                          className="h-8 w-8 rounded-r-md border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                          className="h-8 w-8 shrink-0 rounded-r-md border border-zinc-300 hover:bg-zinc-100 max-lg:h-10 max-lg:w-10 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         >
-                          +
+                          <Icon name="plus" />
                         </button>
                         <span className="ml-3 text-xs text-zinc-500">× {formatUGX(l.product?.sellingPrice ?? 0)}</span>
                       </div>
@@ -417,7 +633,7 @@ export function PosScreen({ products, categories }: { products: PosProduct[]; ca
                     role="radio"
                     aria-checked={method === m}
                     onClick={() => setMethod(m)}
-                    className={`rounded-md border px-2 py-2 text-sm ${
+                    className={`min-h-11 rounded-md border px-2 py-2 text-sm ${
                       method === m
                         ? "border-emerald-600 bg-emerald-50 font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                         : "border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"

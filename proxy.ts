@@ -6,7 +6,7 @@ import { SESSION_COOKIE, type SessionData } from "@/lib/session";
 // First line of defence: cookie-based role checks for pages and APIs.
 // Layouts/pages/route handlers re-verify against the database (see lib/auth.ts).
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/auth/logout", "/api/health"];
+const PUBLIC_PATHS = ["/", "/login", "/login/forgot-password", "/login/reset-password", "/api/auth/login", "/api/auth/logout", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/health"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

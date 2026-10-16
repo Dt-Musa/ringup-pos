@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { inputCls } from "@/components/ui/modal";
 import type { CategoryOption } from "./types";
@@ -11,13 +11,14 @@ export function ProductFilters({ categories }: { categories: CategoryOption[] })
   const params = useSearchParams();
   const [q, setQ] = useState(params.get("q") ?? "");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pending, startTransition] = useTransition();
 
   function update(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
     if (value) next.set(key, value);
     else next.delete(key);
     next.delete("page");
-    router.replace(`${pathname}?${next.toString()}`);
+    startTransition(() => router.replace(`${pathname}?${next.toString()}`));
   }
 
   // Debounced search-as-you-type
@@ -33,7 +34,7 @@ export function ProductFilters({ categories }: { categories: CategoryOption[] })
   const hasFilters = ["q", "categoryId", "status", "stock"].some((k) => params.get(k));
 
   return (
-    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+    <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_auto]" aria-busy={pending}>
       <input
         type="search"
         name="q"
@@ -72,6 +73,9 @@ export function ProductFilters({ categories }: { categories: CategoryOption[] })
           Clear
         </button>
       )}
+      <span role="status" aria-live="polite" className="text-xs text-zinc-500 sm:col-span-2 lg:col-span-1">
+        {pending ? "Updating…" : ""}
+      </span>
     </div>
   );
 }

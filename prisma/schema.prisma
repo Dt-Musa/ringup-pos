@@ -58,10 +58,32 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  sales          Sale[]
-  refunds        Refund[]
-  stockMovements StockMovement[]
-  purchaseOrders PurchaseOrder[]
+  sales               Sale[]
+  refunds             Refund[]
+  stockMovements      StockMovement[]
+  purchaseOrders      PurchaseOrder[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model PasswordRecoveryRateLimit {
+  keyHash         String   @id
+  windowStartedAt DateTime
+  requestCount    Int      @default(0)
+  updatedAt       DateTime @updatedAt
 }
 
 model Category {
@@ -74,6 +96,7 @@ model Category {
 model Product {
   id           String   @id @default(cuid())
   sku          String   @unique
+  barcode      String?  @unique
   name         String
   image        String?
   categoryId   String

@@ -13,6 +13,7 @@ export function productWhere(f: ProductFilters): Prisma.ProductWhereInput {
     where.OR = [
       { name: { contains: f.q, mode: "insensitive" } },
       { sku: { contains: f.q, mode: "insensitive" } },
+      { barcode: { contains: f.q, mode: "insensitive" } },
     ];
   }
   if (f.categoryId) where.categoryId = f.categoryId;

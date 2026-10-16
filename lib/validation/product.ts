@@ -25,6 +25,14 @@ export const productFields = {
     .min(2, "SKU must be at least 2 characters")
     .max(32, "SKU must be 32 characters or fewer")
     .regex(/^[A-Z0-9._-]+$/, "SKU may only contain letters, numbers, dots, dashes and underscores"),
+  barcode: z
+    .string()
+    .trim()
+    .max(48, "Barcode must be 48 characters or fewer")
+    .refine((v) => v === "" || /^[A-Za-z0-9._-]+$/.test(v), "Barcode may only contain letters, numbers, dots, dashes and underscores")
+    .transform((v) => (v === "" ? null : v))
+    .nullable()
+    .optional(),
   categoryId: z.string({ error: "Category is required" }).min(1, "Category is required"),
   buyingCost: money("Buying cost"),
   sellingPrice: money("Selling price"),
@@ -37,6 +45,7 @@ export const productFields = {
 export const createProductSchema = z.object({
   name: productFields.name,
   sku: productFields.sku,
+  barcode: productFields.barcode.default(null),
   categoryId: productFields.categoryId,
   buyingCost: productFields.buyingCost,
   sellingPrice: productFields.sellingPrice,
@@ -50,6 +59,7 @@ export const updateProductSchema = z
   .object({
     name: productFields.name,
     sku: productFields.sku,
+    barcode: productFields.barcode,
     categoryId: productFields.categoryId,
     buyingCost: productFields.buyingCost,
     sellingPrice: productFields.sellingPrice,

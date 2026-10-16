@@ -46,6 +46,9 @@ export async function POST(request: Request) {
     if (isUniqueViolation(e, "sku")) {
       return errorResponse(`SKU "${data.sku}" is already used by another product`, 409, { sku: ["This SKU is already in use"] });
     }
+    if (isUniqueViolation(e, "barcode")) {
+      return errorResponse(`Barcode "${data.barcode}" is already assigned to another product`, 409, { barcode: ["This barcode is already in use"] });
+    }
     throw e;
   }
 }

@@ -9,6 +9,16 @@
   color-scheme: light;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -22,6 +32,8 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   font-size: 0.9375rem;
   line-height: 1.5;
+  min-width: 320px;
+  overflow-x: hidden;
   text-rendering: optimizeLegibility;
 }
 
@@ -156,6 +168,16 @@ input::placeholder {
   opacity: 1;
 }
 
+input[type="number"] {
+  appearance: auto;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: auto;
+  opacity: 1;
+}
+
 .login-input:-webkit-autofill,
 .login-input:-webkit-autofill:hover,
 .login-input:-webkit-autofill:focus {
@@ -277,7 +299,7 @@ a {
   [data-testid="inventory-table"] tr,
   [data-testid="sales-table"] tr,
   [data-testid="history-table"] tr {
-    margin: 0.75rem;
+    margin: 0.5rem;
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
@@ -398,6 +420,34 @@ a {
     display: inline-flex;
     min-height: 2.5rem;
     align-items: center;
+  }
+
+  [data-testid="users-table"] td:last-child > div,
+  [data-testid="products-table"] td:last-child > div,
+  [data-testid="inventory-table"] td:last-child > div {
+    gap: 0.5rem;
+  }
+
+  [data-testid="sales-table"] td:nth-child(2),
+  [data-testid="sales-table"] td:nth-child(3),
+  [data-testid="sales-table"] td:nth-child(4),
+  [data-testid="sales-table"] td:nth-child(7) {
+    min-height: 2.4rem;
+    padding-block: 0.45rem;
+  }
+
+  [data-testid="sales-table"] td:last-child a {
+    margin-right: 0.75rem;
+  }
+
+  [data-testid="sales-table"] td[data-secondary="true"] {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  [data-testid="dashboard-cards"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useTransition } from "react";
 import { inputCls, btnPrimary } from "@/components/ui/modal";
 
 type Props = {
@@ -19,10 +19,11 @@ type Props = {
  */
 export function ReportFilters({ tab, preset, from, to, grain, showGrain, presets }: Props) {
   const formRef = useRef<HTMLFormElement>(null);
+  const [pending, startTransition] = useTransition();
   const field = (name: string) => formRef.current?.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null;
 
   return (
-    <form ref={formRef} method="get" action="/reports" className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900" aria-label="Report filters">
+    <form ref={formRef} method="get" action="/reports" onSubmit={() => startTransition(() => undefined)} aria-busy={pending} className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm shadow-zinc-200/30 dark:border-zinc-800 dark:bg-zinc-900" aria-label="Report filters">
       <input type="hidden" name="tab" value={tab} />
       <label className="text-sm">
         <span className="text-zinc-600 dark:text-zinc-400">Date range</span>
@@ -68,9 +69,10 @@ export function ReportFilters({ tab, preset, from, to, grain, showGrain, presets
       ) : (
         <input type="hidden" name="grain" value={grain} />
       )}
-      <button type="submit" className={btnPrimary}>
-        Apply
+      <button type="submit" disabled={pending} className={btnPrimary}>
+        {pending ? "Updating…" : "Apply"}
       </button>
+      <span role="status" aria-live="polite" className="text-xs text-zinc-500">{pending ? "Refreshing report…" : ""}</span>
     </form>
   );
 }
