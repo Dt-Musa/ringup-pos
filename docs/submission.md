@@ -11,7 +11,7 @@ RingUp POS is a point-of-sale and store-management system for small retailers. I
 
 ## Judge access
 
-- **Account user emails and password shall be shared on watsapp
+- **Account user emails and password shall be shared on watsapp**
 
 
 ## Implemented features
