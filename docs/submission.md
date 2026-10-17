@@ -6,13 +6,12 @@ RingUp POS is a point-of-sale and store-management system for small retailers. I
 ## Submission links
 
 - **Live system:** https://ringuppos.com
-- **Health check:** https://ringuppos.com/api/health
 - **Source repository:** https://github.com/Dt-Musa/ringup-pos
 
 
 ## Judge access
 
-- ** Account user emails and password shall be shared on watsapp
+- **Account user emails and password shall be shared on watsapp
 
 
 ## Implemented features
