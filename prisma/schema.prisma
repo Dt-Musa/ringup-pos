@@ -51,6 +51,7 @@ model User {
   passwordHash   String
   role           Role      @default(CASHIER)
   active         Boolean   @default(true)
+  protected      Boolean   @default(false)
   // Bumped on password reset, role change and deactivation; sessions carry the version they were issued
   // with, so a mismatch logs that user out everywhere (see lib/auth.ts).
   sessionVersion Int       @default(0)

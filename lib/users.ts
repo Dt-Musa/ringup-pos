@@ -95,6 +95,7 @@ export async function getUser(id: string) {
 /**
  * Edit name/email/role and activate/deactivate. Safety rules (server-side):
  *  - an admin can't deactivate or change the role of their own account;
+ *  - a protected account can never be deactivated or demoted by another admin;
  *  - the last active ADMIN can never be deactivated or demoted.
  * A role change or deactivation bumps sessionVersion, which signs that user out everywhere.
  */
@@ -102,7 +103,7 @@ export async function updateUser(actor: CurrentUser, id: string, patch: UpdateUs
   try {
     return await prisma.$transaction(async (tx) => {
       await lockAdminGuard(tx);
-      const target = await tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true, role: true, active: true } });
+      const target = await tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true, role: true, active: true, protected: true } });
       if (!target) throw new UserError("User not found", 404);
 
       const isSelf = target.id === actor.id;
@@ -114,6 +115,14 @@ export async function updateUser(actor: CurrentUser, id: string, patch: UpdateUs
       }
       if (isSelf && roleChanging) {
         throw new UserError("You can't change your own role. Ask another admin to do it.", 409, { role: ["You can't change your own role"] }, "SELF_DEMOTE");
+      }
+      if (target.protected && (deactivating || roleChanging)) {
+        throw new UserError(
+          `${target.name} is protected and cannot be ${deactivating ? "deactivated" : "demoted"}.`,
+          409,
+          deactivating ? { active: ["This account is protected and cannot be deactivated"] } : { role: ["This account is protected and cannot be demoted"] },
+          "PROTECTED_ADMIN",
+        );
       }
       if (target.role === "ADMIN" && target.active && (deactivating || roleChanging)) {
         const otherActiveAdmins = await tx.user.count({ where: { role: "ADMIN", active: true, NOT: { id: target.id } } });
