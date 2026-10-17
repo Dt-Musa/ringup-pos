@@ -24,6 +24,7 @@ The application uses Ugandan shillings (UGX), stored as whole-number amounts.
 Configured account emails:
 
 - **Admin:** `irankundamusa17@gmail.com`
+- **Admin2:** `trusta1link@gmail.com` `(DVN Evaluator Account)`
 - **Manager:** `oxbtytes17@gmail.com`
 - **Cashier:** `oxcurious12@gmail.com`
 
