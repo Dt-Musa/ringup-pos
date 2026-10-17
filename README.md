@@ -99,14 +99,14 @@ Copy `.env.example` to `.env` and keep `.env` out of Git. Set secrets only in lo
 | `DATABASE_URL` | PostgreSQL connection string for the intended environment |
 | `SESSION_SECRET` | Secret used to encrypt session cookies; at least 32 characters |
 | `SEED_PASSWORD` | Optional password used for newly created sample accounts; development/test only |
-| `UPLOAD_DIR` | Local directory for product images; defaults to `./uploads` |
+| `UPLOAD_DIR` | Legacy local directory for older product images; new images are stored in PostgreSQL |
 | `MAX_UPLOAD_BYTES` | Maximum product-image upload size; defaults to 2 MiB |
 | `RESEND_API_KEY` | Server-side Resend credential for password recovery |
 | `RESEND_FROM_EMAIL` | Verified sender address for recovery emails |
 | `APP_URL` | Application origin used to create password-reset links; use the HTTPS production URL in production |
 | `SESSION_COOKIE_SECURE` | Optional secure-cookie override; production defaults to secure cookies |
 
-Password recovery needs valid Resend credentials and the correct `APP_URL`. Without them, login and other application features continue to work, but recovery email is unavailable. Product images are stored on the application filesystem; use persistent storage or an object-storage service if the hosting filesystem is ephemeral.
+Password recovery needs valid Resend credentials and the correct `APP_URL`. Without them, login and other application features continue to work, but recovery email is unavailable. Product images are stored in PostgreSQL so they persist on Vercel and other hosts without a separate storage service.
 
 ## Database changes
 
@@ -135,7 +135,7 @@ Prisma models are in `prisma/schema.prisma`; committed SQL migrations are in `pr
 
 The app can be deployed to Vercel or another Node.js host. Configure the production environment variables in the hosting provider, with `DATABASE_URL` pointing to the production database and `APP_URL` set to the public HTTPS origin. Keep local and production credentials separate. Apply required committed migrations to the intended production database as a deliberate release step; builds do not apply them automatically.
 
-If the host uses ephemeral storage, uploaded product images need persistent or object storage. Password-reset email also requires a verified Resend sender and production `APP_URL`.
+Product-image persistence requires the committed `ProductImage` migration to be applied to the production database. Password-reset email also requires a verified Resend sender and production `APP_URL`.
 
 ## Project structure
 

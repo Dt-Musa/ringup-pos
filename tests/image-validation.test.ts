@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DEFAULT_MAX_IMAGE_BYTES, UploadError, validateImageFile } from "../lib/image-validation";
+import { productImagePath } from "../lib/product-images";
 
 const signatures = [
   { name: "photo.jpg", type: "image/jpeg", bytes: [0xff, 0xd8, 0xff, 0x00], ext: "jpg" },
@@ -34,4 +35,9 @@ test("enforces the 2 MB limit and accepts a file exactly at the limit", async ()
   const atLimit = Buffer.alloc(DEFAULT_MAX_IMAGE_BYTES);
   Buffer.from(signatures[1].bytes).copy(atLimit);
   assert.equal((await validateImageFile(new File([atLimit], "limit.png", { type: "image/png" }))).data.byteLength, DEFAULT_MAX_IMAGE_BYTES);
+});
+
+test("prefers a saved upload while retaining bundled images when no upload exists", () => {
+  assert.equal(productImagePath("Bottled Water 500ml", "/uploads/123e4567-e89b-12d3-a456-426614174000.png"), "/uploads/123e4567-e89b-12d3-a456-426614174000.png");
+  assert.equal(productImagePath("Bottled Water 500ml", null), "/assets/POS/bottled%20water%20500ml_result_result.webp");
 });

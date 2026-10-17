@@ -25,5 +25,6 @@ const normalizeProductName = (name: string) => name.trim().toLowerCase().replace
 
 export function productImagePath(name: string, fallback: string | null = null): string | null {
   const filename = PRODUCT_IMAGE_BY_NAME[normalizeProductName(name)];
-  return filename ? `/assets/POS/${encodeURIComponent(filename).replace(/%2F/g, "/")}` : fallback;
+  if (fallback) return fallback;
+  return filename ? `/assets/POS/${encodeURIComponent(filename).replace(/%2F/g, "/")}` : null;
 }

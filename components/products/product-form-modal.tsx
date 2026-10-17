@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { btnPrimary, btnSecondary, inputCls, Modal } from "@/components/ui/modal";
 import { formatUGX } from "@/lib/format";
@@ -44,6 +44,7 @@ export function ProductFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const submitInFlight = useRef(false);
 
   const cost = Number(buyingCost);
   const price = Number(sellingPrice);
@@ -80,6 +81,8 @@ export function ProductFormModal({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitInFlight.current || uploading) return;
+    submitInFlight.current = true;
     setError(null);
     setFieldErrors({});
     setSaving(true);
@@ -100,19 +103,25 @@ export function ProductFormModal({
     const payload = Object.fromEntries(Object.entries(body).map(([k, v]) => [k, typeof v === "number" && Number.isNaN(v) ? "" : v]));
     // Don't overwrite stock that may have changed (e.g. a sale) unless the user actually edited it.
     if (editing && body.stockQty === product.stockQty) delete (payload as Record<string, unknown>).stockQty;
-    const res = await fetch(editing ? `/api/products/${product.id}` : "/api/products", {
-      method: editing ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json().catch(() => ({}));
-    setSaving(false);
-    if (res.ok) {
-      router.refresh();
-      onClose();
-    } else {
-      setError(data.error ?? "Could not save the product");
-      setFieldErrors(data.fieldErrors ?? {});
+    try {
+      const res = await fetch(editing ? `/api/products/${product.id}` : "/api/products", {
+        method: editing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        router.refresh();
+        onClose();
+      } else {
+        setError(data.error ?? "Could not save the product");
+        setFieldErrors(data.fieldErrors ?? {});
+      }
+    } catch {
+      setError("Could not confirm the save. Check the product list by SKU before retrying.");
+    } finally {
+      submitInFlight.current = false;
+      setSaving(false);
     }
   }
 
