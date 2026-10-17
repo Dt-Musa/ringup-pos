@@ -117,6 +117,15 @@ model Product {
   @@index([active])
 }
 
+// Product images are kept in PostgreSQL so uploads remain available across
+// serverless instances and deployments.
+model ProductImage {
+  id        String   @id
+  data      Bytes
+  mime      String
+  createdAt DateTime @default(now())
+}
+
 model StockMovement {
   id              String            @id @default(cuid())
   productId       String

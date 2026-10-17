@@ -59,14 +59,23 @@ export function ProductFormModal({
       setFieldErrors((f) => ({ ...f, image: ["Image is too large (max 2 MB)"] }));
       return;
     }
+    if (!( ["image/jpeg", "image/png", "image/webp", "image/gif"] as string[]).includes(file.type)) {
+      setFieldErrors((f) => ({ ...f, image: ["Unsupported file type. Use a JPG, PNG, WebP or GIF image"] }));
+      return;
+    }
     setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/uploads", { method: "POST", body: fd });
-    const data = await res.json().catch(() => ({}));
-    setUploading(false);
-    if (res.ok) setImage(data.path);
-    else setFieldErrors((f) => ({ ...f, image: [data.error ?? "Upload failed"] }));
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/uploads", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && typeof data.path === "string") setImage(data.path);
+      else setFieldErrors((f) => ({ ...f, image: [data.error ?? "The image could not be uploaded. Please try again."] }));
+    } catch {
+      setFieldErrors((f) => ({ ...f, image: ["The image could not be uploaded. Check your connection and try again."] }));
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {

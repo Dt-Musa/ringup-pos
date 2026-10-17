@@ -2,7 +2,7 @@ import { readImage } from "@/lib/uploads";
 
 export const runtime = "nodejs";
 
-// Serves uploaded product images from UPLOAD_DIR (works in `next start` for files added at runtime).
+// Serves database-backed uploads and legacy local-disk uploads.
 export async function GET(_req: Request, { params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const img = await readImage(name);

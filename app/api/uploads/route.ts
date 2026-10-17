@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ path }, { status: 201 });
   } catch (e) {
     if (e instanceof UploadError) return errorResponse(e.message, 400);
-    throw e;
+    console.error("[uploads] failed to store image", e instanceof Error ? e.message : e);
+    return errorResponse("The image could not be uploaded. Please try again.", 500);
   }
 }
