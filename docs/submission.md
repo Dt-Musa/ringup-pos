@@ -11,7 +11,15 @@ RingUp POS is a point-of-sale and store-management system for small retailers. I
 
 ## Judge access
 
-- **Account user emails and password shall be shared on watsapp**
+- **Account user emails**
+- **Admin** 
+- Email- trusta1link@gmail.com
+- **Manager**
+- Email- oxbytes17@gmail.com
+- **Cashier**
+- Email- oxcurious12@gmail.com
+- **Password**
+- **Pos@12345** (Applies to all accounts above)
 
 
 ## Implemented features
